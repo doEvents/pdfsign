@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FajarPDFSigner - Tanda Tangan PDF Digital</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FajarPDFSigner">
+  <meta name="description" content="Aplikasi tanda tangan dokumen PDF digital langsung di browser & ponsel Anda secara offline dan aman.">
+
+  <!-- Favicon & PWA Icons -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%232563eb'/><path d='M30 65 L48 70 L72 32 C75 28 70 24 66 28 L42 60 L30 65 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='5' fill='%2338bdf8'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%232563eb'/><path d='M30 65 L48 70 L72 32 C75 28 70 24 66 28 L42 60 L30 65 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='5' fill='%2338bdf8'/></svg>">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- PDF.js for rendering PDF to Canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- PDF-Lib for modifying and flattening signature directly onto PDF document -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    
+    input, textarea {
+      user-select: auto;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overscroll-behavior-y: none;
+      touch-action: pan-x pan-y;
+    }
+
+    /* Mencegah lag dan glitch scrolling di Safari & Chrome Mobile */
+    .smooth-scroll {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Touch-friendly stamp resize handle */
+    .stamp-handle {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      background: #2563eb;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      cursor: nwse-resize;
+      bottom: -14px;
+      right: -14px;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+      touch-action: none;
+    }
+
+    /* Pattern kotak transparan */
+    .bg-grid-pattern {
+      background-size: 16px 16px;
+      background-image: 
+        linear-gradient(to right, rgba(203, 213, 225, 0.3) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(203, 213, 225, 0.3) 1px, transparent 1px);
+    }
+
+    /* Safe-area padding untuk notch layar HP */
+    .safe-top {
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 h-screen flex flex-col overflow-hidden">
+
+  <!-- Top App Bar & Unified Icon Toolbar -->
+  <header class="bg-slate-900 text-white safe-top z-40 border-b border-slate-800 shrink-0">
+    <div class="px-3 h-14 flex items-center justify-between gap-2">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/30">
+          <i class="fa-solid fa-file-signature text-sm"></i>
+        </div>
+        <div class="hidden xs:block sm:block">
+          <h1 class="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">FajarPDFSigner</h1>
+          <p id="topBarSubtitle" class="text-[10px] text-slate-400 truncate max-w-[110px] sm:max-w-[200px]">Tanda tangan offline</p>
+        </div>
+      </div>
+      
+      <!-- Unified Single-Row Icon Toolbar -->
+      <div class="flex items-center gap-1.5 sm:gap-2 relative">
+        
+        <!-- 1. Buka PDF (Icon) -->
+        <label class="cursor-pointer w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow transition shrink-0" title="Buka PDF">
+          <i class="fa-solid fa-folder-open text-sm"></i>
+          <input type="file" id="pdfFileInput" accept="application/pdf,.pdf" class="hidden">
+        </label>
+
+        <!-- 2. Simpan PDF (Icon di samping Buka PDF) -->
+        <button id="btnSavePdfHeader" disabled class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 active:scale-95 text-white shadow flex items-center justify-center transition shrink-0" title="Simpan PDF">
+          <i class="fa-solid fa-floppy-disk text-sm"></i>
+        </button>
+
+        <!-- 3. Zoom Dropdown Trigger & Popover -->
+        <div class="relative" id="zoomDropdownWrapper">
+          <button id="btnToggleZoom" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0" title="Pengaturan Zoom">
+            <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
+          </button>
+          <!-- Popover Zoom (- 100% +) -->
+          <div id="pdfZoomBar" class="hidden absolute left-1/2 -translate-x-1/2 top-11 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-1.5 flex items-center gap-1 z-50">
+            <button id="btnZoomOut" class="w-8 h-8 rounded-lg text-slate-200 hover:bg-slate-700 active:bg-slate-600 flex items-center justify-center" title="Perkecil">
+              <i class="fa-solid fa-minus text-xs"></i>
+            </button>
+            <button id="btnZoomReset" class="px-2.5 h-8 rounded-lg text-xs font-bold text-blue-400 hover:bg-slate-700 whitespace-nowrap" title="Reset Ukuran">
+              100%
+            </button>
+            <button id="btnZoomIn" class="w-8 h-8 rounded-lg text-slate-200 hover:bg-slate-700 active:bg-slate-600 flex items-center justify-center" title="Perbesar">
+              <i class="fa-solid fa-plus text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Navigasi Halaman Dropdown Trigger & Popover -->
+        <div class="relative" id="pageDropdownWrapper">
+          <button id="btnTogglePageNav" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0" title="Navigasi Halaman">
+            <i class="fa-solid fa-book-open text-sm"></i>
+          </button>
+          <!-- Popover Navigasi Halaman -->
+          <div id="pdfPaginationBar" class="hidden absolute left-1/2 -translate-x-1/2 top-11 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-1.5 flex items-center gap-1.5 z-50 whitespace-nowrap">
+            <button id="btnPrevPage" class="w-8 h-8 rounded-lg text-slate-200 hover:bg-slate-700 active:bg-slate-600 flex items-center justify-center disabled:opacity-30" title="Sebelumnya">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <div class="flex items-center gap-1 text-xs text-slate-200 px-1">
+              <input 
+                type="number" 
+                id="jumpPageInput" 
+                value="1" 
+                min="1" 
+                class="w-12 h-7 text-center font-bold text-xs bg-slate-900 text-blue-400 border border-slate-700 rounded-md focus:outline-none focus:border-blue-500"
+              />
+              <span class="text-xs text-slate-400">/ <span id="totalPagesLabel">1</span></span>
+            </div>
+            <button id="btnNextPage" class="w-8 h-8 rounded-lg text-slate-200 hover:bg-slate-700 active:bg-slate-600 flex items-center justify-center disabled:opacity-30" title="Selanjutnya">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Divider tipis -->
+        <div class="w-px h-6 bg-slate-800 mx-0.5"></div>
+
+        <!-- 5. View Dokumen PDF (Icon) -->
+        <button id="tabNavDoc" class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/40 active:scale-95 flex items-center justify-center transition shrink-0" title="Lihat Dokumen PDF">
+          <i class="fa-solid fa-file-pdf text-sm"></i>
+        </button>
+
+        <!-- 6. Buat TTD (Icon) -->
+        <button id="tabNavDraw" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0" title="Buat Tanda Tangan">
+          <i class="fa-solid fa-pen-nib text-sm"></i>
+        </button>
+
+        <!-- 7. Tersimpan TTD (Icon + Badge) -->
+        <button id="tabNavDb" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0 relative" title="Tanda Tangan Tersimpan">
+          <i class="fa-solid fa-box-archive text-sm"></i>
+          <span id="badgeDbCount" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 text-white text-[9px] font-bold flex items-center justify-center hidden">0</span>
+        </button>
+
+        <!-- 8. Hapus Stempel Aktif (Muncul saat ada TTD di PDF) -->
+        <button id="btnQuickRemoveStamp" class="hidden w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30 active:scale-95 flex items-center justify-center text-sm shrink-0" title="Hapus Stempel TTD">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+
+        <!-- 9. PWA Install Icon Button (Jika tersedia) -->
+        <button id="btnPwaInstall" class="hidden w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white flex items-center justify-center shadow-sm transition shrink-0" title="Pasang Aplikasi">
+          <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- SCREEN VIEW CONTAINERS -->
+  <main class="flex-1 relative overflow-hidden bg-slate-950 flex flex-col">
+
+    <!-- 1. TAB VIEW: DOKUMEN PDF (Default View) -->
+    <section id="viewDocument" class="absolute inset-0 flex flex-col z-10 bg-slate-950">
+
+      <!-- PDF Document Viewport Area (Block layout prevents top clipping on page 2+ & landscape) -->
+      <div id="pdfViewport" class="flex-1 overflow-auto smooth-scroll p-3 sm:p-6 pb-24 relative">
+        
+        <!-- Empty State Placeholder -->
+        <div id="emptyDocPlaceholder" class="min-h-[65vh] flex flex-col items-center justify-center text-center max-w-xs mx-auto my-auto">
+          <div class="w-16 h-16 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-blue-500 mb-4 shadow-inner">
+            <i class="fa-regular fa-file-pdf text-3xl"></i>
+          </div>
+          <h2 class="text-sm font-bold text-white mb-1">Belum Ada Dokumen PDF</h2>
+          <p class="text-xs text-slate-400 mb-5 leading-relaxed">
+            Pilih dokumen PDF dari perangkat Anda untuk mulai menempelkan tanda tangan digital secara permanen.
+          </p>
+          <button onclick="document.getElementById('pdfFileInput').click()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold shadow-lg shadow-blue-600/25 flex items-center gap-2 transition">
+            <i class="fa-solid fa-folder-open"></i>
+            <span>Pilih File PDF</span>
+          </button>
+        </div>
+
+        <!-- PDF Stage Wrapper -->
+        <div id="pdfStageWrapper" class="hidden w-full">
+          <div id="pdfStageContainer" class="relative mx-auto bg-white shadow-2xl rounded-sm overflow-hidden select-none">
+            <canvas id="pdfCanvas" class="block"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Hint Bar Bottom -->
+      <div id="pdfHintBar" class="hidden bg-slate-900/90 backdrop-blur-md border-t border-slate-800 px-3 py-1.5 text-center text-[11px] text-slate-300 shrink-0">
+        <i class="fa-solid fa-hand-pointer text-blue-400 mr-1"></i> Geser tanda tangan untuk memindahkan, tarik titik biru di pojok untuk mengubah ukuran.
+      </div>
+
+    </section>
+
+    <!-- 2. TAB VIEW: BUAT TANDA TANGAN (Canvas Pad & Upload PNG) -->
+    <section id="viewSignaturePad" class="absolute inset-0 flex flex-col z-0 hidden bg-slate-900 p-4 overflow-y-auto smooth-scroll">
+      <div class="max-w-lg w-full mx-auto flex-1 flex flex-col">
+        
+        <!-- Header & Mode Switcher (Gambar Manual vs Upload PNG) -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-pen-nib text-blue-400"></i> Studio Tanda Tangan
+            </h2>
+            <p class="text-[11px] text-slate-400">Goreskan langsung atau unggah file gambar tanda tangan (PNG)</p>
+          </div>
+          
+          <div class="flex items-center gap-2 self-start sm:self-auto">
+            <label class="cursor-pointer px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/40 text-xs font-bold active:scale-95 flex items-center gap-1.5 shadow-sm transition">
+              <i class="fa-solid fa-file-arrow-up text-xs"></i>
+              <span>Upload PNG</span>
+              <input type="file" id="pngSignInput" accept="image/png,image/webp,image/jpeg" class="hidden">
+            </label>
+            <button id="btnClearCanvas" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold active:scale-95 flex items-center gap-1 transition">
+              <i class="fa-solid fa-rotate-left text-[11px]"></i> Ulang
+            </button>
+          </div>
+        </div>
+
+        <!-- Touch Canvas Container (Also supports Drag & Drop PNG) -->
+        <div id="signatureDropZone" class="relative w-full h-60 sm:h-64 bg-white rounded-2xl overflow-hidden border-2 border-slate-700 shadow-inner bg-grid-pattern touch-none shrink-0 transition">
+          <canvas id="handDrawCanvas" class="w-full h-full block cursor-crosshair touch-none"></canvas>
+          <div id="canvasEmptyNote" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs p-4 text-center">
+            <i class="fa-solid fa-signature text-4xl mb-2 text-slate-300"></i>
+            <span class="font-semibold text-slate-500">Goreskan tanda tangan di area ini</span>
+            <span class="text-[10px] text-slate-400 mt-0.5">atau ketuk tombol "Upload PNG" di atas</span>
+          </div>
+        </div>
+
+        <!-- Quick Upload PNG Card & Background Removal Tool -->
+        <div class="mt-3 bg-slate-800/90 p-3 rounded-xl border border-slate-700 flex flex-col gap-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
+                <i class="fa-regular fa-file-image text-sm"></i>
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-white truncate">Punya File TTD PNG?</p>
+                <p id="uploadedFileName" class="text-[10px] text-slate-400 truncate">Mendukung PNG transparan / scan tanda tangan</p>
+              </div>
+            </div>
+            <button onclick="document.getElementById('pngSignInput').click()" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[11px] font-bold shrink-0 shadow transition">
+              Pilih File PNG
+            </button>
+          </div>
+
+          <!-- Opsi Hapus Background Putih (Muncul saat gambar di-upload) -->
+          <div id="pngToolsBar" class="hidden pt-2 border-t border-slate-700/80 flex items-center justify-between gap-2">
+            <span class="text-[11px] text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+              <span>Background gambar belum transparan?</span>
+            </span>
+            <button id="btnRemoveWhiteBg" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[11px] font-bold active:scale-95 transition">
+              Hapus Latar Putih
+            </button>
+          </div>
+        </div>
+
+        <!-- Ink Colors & Stroke Controls -->
+        <div class="mt-3 flex items-center justify-between bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
+          <span class="text-xs text-slate-300 font-semibold pl-1">Warna Tinta Goresan</span>
+          <div class="flex items-center gap-3">
+            <button data-color="#0f172a" class="ink-color-btn w-7 h-7 rounded-full bg-slate-900 ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-800 transition"></button>
+            <button data-color="#1d4ed8" class="ink-color-btn w-7 h-7 rounded-full bg-blue-700 transition"></button>
+            <button data-color="#b91c1c" class="ink-color-btn w-7 h-7 rounded-full bg-red-700 transition"></button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-3 grid grid-cols-2 gap-3 pb-24">
+          <button id="btnSaveToDB" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-bold border border-slate-700 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-floppy-disk text-amber-400"></i>
+            <span>Simpan ke DB</span>
+          </button>
+          <button id="btnUseDirectly" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-stamp text-white"></i>
+            <span>Pakai di PDF</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. TAB VIEW: DATABASE TTD TERSIMPAN (IndexedDB) -->
+    <section id="viewDatabase" class="absolute inset-0 flex flex-col z-0 hidden bg-slate-900 p-4 smooth-scroll">
+      <div class="max-w-md w-full mx-auto flex-1 flex flex-col pb-24">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-box-archive text-amber-400"></i> Database Lokal
+            </h2>
+            <p class="text-[11px] text-slate-400">Tersimpan di IndexedDB memori browser ponsel</p>
+          </div>
+          <span id="savedCountTag" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-blue-400 border border-slate-700">0 TTD</span>
+        </div>
+
+        <!-- Signature Cards Container -->
+        <div id="savedSignaturesContainer" class="space-y-2.5 overflow-y-auto flex-1">
+          <!-- Dinamis via JS -->
+          <div id="dbEmptyMessage" class="text-center py-16 text-slate-500 text-xs">
+            <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-600 block"></i>
+            Belum ada tanda tangan tersimpan.<br>Buka ikon Pena di atas untuk membuat tanda tangan baru.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 transform -translate-y-20 opacity-0 transition-all duration-300 w-11/12 max-w-sm pointer-events-none">
+    <div class="bg-slate-800/95 border border-slate-700 shadow-2xl rounded-2xl p-3.5 flex items-center gap-3 backdrop-blur-md">
+      <div id="toastIconBox" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+        <i id="toastIcon" class="fa-solid fa-check text-sm"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p id="toastMessage" class="text-xs font-semibold text-white truncate">Operasi berhasil</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA INSTALL MODAL GUIDE -->
+  <div id="pwaModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center p-3">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-5 text-white shadow-2xl">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-xl text-white shadow-lg shadow-blue-500/30">
+          <i class="fa-brands fa-chrome"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold">Pasang di Android</h3>
+          <p class="text-xs text-slate-400">Jalankan seperti aplikasi asli</p>
+        </div>
+      </div>
+      
+      <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+        Gunakan PDFSigner layaknya aplikasi Android mandiri tanpa URL bar, responsif, dan dapat diakses cepat dari layar utama Anda.
+      </p>
+
+      <div class="space-y-2 mb-4">
+        <button id="btnConfirmInstall" class="w-full py-3 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-lg transition">
+          Pasang Sekarang
+        </button>
+        <button id="btnDismissPwa" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 text-xs font-semibold rounded-xl">
+          Nanti Saja
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+     * 0. PDF.JS ROBUST INITIALIZATION & SAFE WORKER CONFIG
+     * ========================================================================= */
+    // Konfigurasi worker yang toleran terhadap kegagalan jaringan & CSP
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    /* =========================================================================
+     * 1. STATE MANAGEMENT & DOM REFERENCES
+     * ========================================================================= */
+    let currentPdfDoc = null;
+    let originalFileObj = null;
+    let originalPdfBytes = null;
+    let currentPageNum = 1;
+    let totalPdfPages = 1;
+    let currentRenderTask = null;
+    let isRendering = false;
+    let pendingPageRender = null;
+    let deferredPrompt = null;
+    let zoomFactor = 1.0;
+    
+    // Multi-stamps registry: disimpan dengan rasio ter-normalisasi (rx, ry, rw, rh antara 0..1)
+    // agar saat layar diputar (potret/lanskap/desktop) atau di-zoom, posisi tetap akurat!
+    let stampsList = []; // Array of { id, dataUrl, pageNumber, rx, ry, rw, rh }
+    let activeStampId = null;
+
+    // DOM References
+    const pdfFileInput = document.getElementById('pdfFileInput');
+    const emptyDocPlaceholder = document.getElementById('emptyDocPlaceholder');
+    const pdfStageWrapper = document.getElementById('pdfStageWrapper');
+    const pdfStageContainer = document.getElementById('pdfStageContainer');
+    const pdfCanvas = document.getElementById('pdfCanvas');
+    const pdfViewport = document.getElementById('pdfViewport');
+    const pdfPaginationBar = document.getElementById('pdfPaginationBar');
+    const pdfZoomBar = document.getElementById('pdfZoomBar');
+    const btnToggleZoom = document.getElementById('btnToggleZoom');
+    const btnTogglePageNav = document.getElementById('btnTogglePageNav');
+    const zoomDropdownWrapper = document.getElementById('zoomDropdownWrapper');
+    const pageDropdownWrapper = document.getElementById('pageDropdownWrapper');
+    const btnZoomIn = document.getElementById('btnZoomIn');
+    const btnZoomOut = document.getElementById('btnZoomOut');
+    const btnZoomReset = document.getElementById('btnZoomReset');
+    const jumpPageInput = document.getElementById('jumpPageInput');
+    const totalPagesLabel = document.getElementById('totalPagesLabel');
+    const btnPrevPage = document.getElementById('btnPrevPage');
+    const btnNextPage = document.getElementById('btnNextPage');
+    const btnSavePdfHeader = document.getElementById('btnSavePdfHeader');
+    const btnQuickRemoveStamp = document.getElementById('btnQuickRemoveStamp');
+    const topBarSubtitle = document.getElementById('topBarSubtitle');
+    const pdfHintBar = document.getElementById('pdfHintBar');
+    const pngSignInput = document.getElementById('pngSignInput');
+
+    // Signature Canvas references
+    const handDrawCanvas = document.getElementById('handDrawCanvas');
+    const canvasEmptyNote = document.getElementById('canvasEmptyNote');
+    const btnClearCanvas = document.getElementById('btnClearCanvas');
+    const btnSaveToDB = document.getElementById('btnSaveToDB');
+    const btnUseDirectly = document.getElementById('btnUseDirectly');
+    const inkColorBtns = document.querySelectorAll('.ink-color-btn');
+    const savedSignaturesContainer = document.getElementById('savedSignaturesContainer');
+    const dbEmptyMessage = document.getElementById('dbEmptyMessage');
+    const savedCountTag = document.getElementById('savedCountTag');
+    const badgeDbCount = document.getElementById('badgeDbCount');
+    const pngToolsBar = document.getElementById('pngToolsBar');
+    const btnRemoveWhiteBg = document.getElementById('btnRemoveWhiteBg');
+    const uploadedFileName = document.getElementById('uploadedFileName');
+    const signatureDropZone = document.getElementById('signatureDropZone');
+
+    // View & Tab Navigation References
+    const viewDocument = document.getElementById('viewDocument');
+    const viewSignaturePad = document.getElementById('viewSignaturePad');
+    const viewDatabase = document.getElementById('viewDatabase');
+    const tabNavDoc = document.getElementById('tabNavDoc');
+    const tabNavDraw = document.getElementById('tabNavDraw');
+    const tabNavDb = document.getElementById('tabNavDb');
+
+    // Popover Zoom & Page Navigation Toggle Logic
+    btnToggleZoom.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = pdfZoomBar.classList.contains('hidden');
+      pdfPaginationBar.classList.add('hidden');
+      if (isHidden) {
+        pdfZoomBar.classList.remove('hidden');
+      } else {
+        pdfZoomBar.classList.add('hidden');
+      }
+    });
+
+    btnTogglePageNav.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = pdfPaginationBar.classList.contains('hidden');
+      pdfZoomBar.classList.add('hidden');
+      if (isHidden) {
+        pdfPaginationBar.classList.remove('hidden');
+      } else {
+        pdfPaginationBar.classList.add('hidden');
+      }
+    });
+
+    // Tutup popover saat klik di luar area dropdown
+    document.addEventListener('click', (e) => {
+      if (zoomDropdownWrapper && !zoomDropdownWrapper.contains(e.target)) {
+        pdfZoomBar.classList.add('hidden');
+      }
+      if (pageDropdownWrapper && !pageDropdownWrapper.contains(e.target)) {
+        pdfPaginationBar.classList.add('hidden');
+      }
+    });
+
+    /* =========================================================================
+     * 2. TOAST NOTIFICATION UTILITY
+     * ========================================================================= */
+    let toastTimeout = null;
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      const toastIconBox = document.getElementById('toastIconBox');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMessage.textContent = message;
+      if (type === 'success') {
+        toastIconBox.className = 'w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
+        toastIcon.className = 'fa-solid fa-check text-sm';
+      } else if (type === 'error') {
+        toastIconBox.className = 'w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0';
+        toastIcon.className = 'fa-solid fa-triangle-exclamation text-sm';
+      } else {
+        toastIconBox.className = 'w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0';
+        toastIcon.className = 'fa-solid fa-info text-sm';
+      }
+
+      toast.classList.remove('opacity-0', '-translate-y-20', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-20', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 3500);
+    }
+
+    /* =========================================================================
+     * 3. PDF LOADING AND RENDERING ENGINE (WITH FALLBACK)
+     * ========================================================================= */
+    pdfFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+        showToast('Pilih berkas dokumen berformat PDF yang valid', 'error');
+        return;
+      }
+
+      try {
+        showToast('Membaca berkas PDF...', 'info');
+        originalFileObj = file;
+        topBarSubtitle.textContent = file.name;
+
+        // Baca ArrayBuffer dari file
+        const buffer = await file.arrayBuffer();
+        originalPdfBytes = buffer.slice(0); // Buat salinan independen untuk PDF-Lib
+
+        // Pastikan pustaka PDF.js siap
+        if (!window.pdfjsLib) {
+          throw new Error('Pustaka pembaca PDF (PDF.js) belum terpasang dengan benar.');
+        }
+
+        // Muat dokumen PDF dengan fallback jika worker gagal
+        const loadingTask = window.pdfjsLib.getDocument({
+          data: new Uint8Array(buffer),
+          cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+          cMapPacked: true,
+          standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',
+          stopAtErrors: false
+        });
+
+        currentPdfDoc = await loadingTask.promise;
+        totalPdfPages = currentPdfDoc.numPages;
+        totalPagesLabel.textContent = totalPdfPages;
+        jumpPageInput.max = totalPdfPages;
+        jumpPageInput.value = 1;
+        currentPageNum = 1;
+        zoomFactor = 1.0;
+        if (btnZoomReset) btnZoomReset.textContent = '100%';
+
+        emptyDocPlaceholder.classList.add('hidden');
+        pdfStageWrapper.classList.remove('hidden');
+        btnSavePdfHeader.disabled = false;
+        pdfHintBar.classList.remove('hidden');
+
+        await renderPage(1, true);
+        showToast(`Dokumen berhasil dibuka (${totalPdfPages} halaman)`, 'success');
+      } catch (err) {
+        console.error('Error loading PDF:', err);
+        showToast('Gagal membuka PDF: ' + (err.message || 'Format tidak didukung'), 'error');
+      } finally {
+        pdfFileInput.value = '';
+      }
+    });
+
+    // Render single PDF page to canvas with anti-clipping & responsive scaling
+    async function renderPage(num, resetScroll = true) {
+      if (!currentPdfDoc) return;
+      if (isRendering) {
+        pendingPageRender = num;
+        if (currentRenderTask) {
+          try { currentRenderTask.cancel(); } catch (e) {}
+        }
+        return;
+      }
+
+      isRendering = true;
+      currentPageNum = num;
+      jumpPageInput.value = num;
+
+      btnPrevPage.disabled = currentPageNum <= 1;
+      btnNextPage.disabled = currentPageNum >= totalPdfPages;
+
+      try {
+        const page = await currentPdfDoc.getPage(num);
+        const unscaledViewport = page.getViewport({ scale: 1 });
+
+        // Hitung ruang tampilan yang tersedia di #pdfViewport
+        const availW = Math.max(260, (pdfViewport.clientWidth || window.innerWidth) - 32);
+        const availH = Math.max(260, (pdfViewport.clientHeight || window.innerHeight) - 32);
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const isDesktop = window.innerWidth >= 1024;
+
+        let targetWidth;
+        if (isDesktop) {
+          // Pada layar Desktop, gunakan lebar dokumen yang nyaman dibaca (maksimal 780px pada zoom 100%)
+          targetWidth = Math.min(availW, 780);
+        } else if (isLandscape) {
+          // Pada Ponsel/Tablet mode Lanskap, batasi lebar agar halaman tidak terlalu raksasa
+          // dan tetap nyaman di-scroll dari paling atas
+          targetWidth = Math.min(availW, Math.max(480, availH * (unscaledViewport.width / unscaledViewport.height) * 1.15));
+        } else {
+          // Pada Ponsel mode Potret, pas dengan lebar layar
+          targetWidth = availW;
+        }
+
+        const baseScale = targetWidth / unscaledViewport.width;
+        const finalScale = baseScale * zoomFactor;
+        const viewport = page.getViewport({ scale: finalScale });
+
+        const cssWidth = Math.floor(viewport.width);
+        const cssHeight = Math.floor(viewport.height);
+
+        // Set ukuran eksplisit pada stage container dan canvas
+        pdfStageContainer.style.width = `${cssWidth}px`;
+        pdfStageContainer.style.height = `${cssHeight}px`;
+
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        pdfCanvas.width = Math.floor(cssWidth * pixelRatio);
+        pdfCanvas.height = Math.floor(cssHeight * pixelRatio);
+        pdfCanvas.style.width = `${cssWidth}px`;
+        pdfCanvas.style.height = `${cssHeight}px`;
+
+        const ctx = pdfCanvas.getContext('2d');
+        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+        // Reset posisi scroll ke paling atas setiap berganti halaman
+        if (resetScroll && pdfViewport) {
+          pdfViewport.scrollTop = 0;
+          pdfViewport.scrollLeft = 0;
+        }
+
+        currentRenderTask = page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        });
+        await currentRenderTask.promise;
+
+        // Render ulang semua tanda tangan di halaman ini sesuai ukuran stage terbaru
+        renderStampsForCurrentPage();
+
+        if (resetScroll && pdfViewport) {
+          pdfViewport.scrollTop = 0;
+        }
+      } catch (err) {
+        if (err?.name !== 'RenderingCancelledException') {
+          console.error('Render error:', err);
+        }
+      } finally {
+        isRendering = false;
+        currentRenderTask = null;
+        if (pendingPageRender !== null) {
+          const nextPage = pendingPageRender;
+          pendingPageRender = null;
+          renderPage(nextPage, true);
+        }
+      }
+    }
+
+    // Zoom Controls Event Listeners
+    if (btnZoomIn) {
+      btnZoomIn.addEventListener('click', () => {
+        zoomFactor = Math.min(2.5, +(zoomFactor + 0.2).toFixed(2));
+        btnZoomReset.textContent = `${Math.round(zoomFactor * 100)}%`;
+        renderPage(currentPageNum, false);
+      });
+    }
+    if (btnZoomOut) {
+      btnZoomOut.addEventListener('click', () => {
+        zoomFactor = Math.max(0.5, +(zoomFactor - 0.2).toFixed(2));
+        btnZoomReset.textContent = `${Math.round(zoomFactor * 100)}%`;
+        renderPage(currentPageNum, false);
+      });
+    }
+    if (btnZoomReset) {
+      btnZoomReset.addEventListener('click', () => {
+        zoomFactor = 1.0;
+        btnZoomReset.textContent = '100%';
+        renderPage(currentPageNum, false);
+      });
+    }
+
+    // Pagination events
+    btnPrevPage.addEventListener('click', () => {
+      if (currentPageNum > 1) {
+        renderPage(currentPageNum - 1, true);
+      }
+    });
+
+    btnNextPage.addEventListener('click', () => {
+      if (currentPageNum < totalPdfPages) {
+        renderPage(currentPageNum + 1, true);
+      }
+    });
+
+    // Jump page input
+    jumpPageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        jumpPageInput.blur();
+      }
+    });
+
+    jumpPageInput.addEventListener('change', () => {
+      let target = parseInt(jumpPageInput.value, 10);
+      if (isNaN(target)) target = 1;
+      target = Math.max(1, Math.min(totalPdfPages, target));
+      jumpPageInput.value = target;
+      if (target !== currentPageNum) {
+        renderPage(target, true);
+      }
+    });
+
+    jumpPageInput.addEventListener('focus', () => {
+      jumpPageInput.select();
+    });
+
+    /* =========================================================================
+     * 4. SIGNATURE STUDIO: HAND DRAW & PNG UPLOAD ENGINE
+     * ========================================================================= */
+    let sigCtx = handDrawCanvas.getContext('2d');
+    let isDrawingSig = false;
+    let hasSignatureContent = false;
+    let currentInkColor = '#0f172a';
+    let lastSigPoint = { x: 0, y: 0 };
+
+    function resizeSignatureCanvas() {
+      if (!handDrawCanvas) return;
+      const rect = handDrawCanvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+
+      // Simpan konten kanvas sebelumnya jika sudah ada goresan
+      let prevDataUrl = null;
+      if (hasSignatureContent && handDrawCanvas.width > 0 && handDrawCanvas.height > 0) {
+        try {
+          prevDataUrl = handDrawCanvas.toDataURL('image/png');
+        } catch (e) {}
+      }
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      handDrawCanvas.width = Math.floor(rect.width * dpr);
+      handDrawCanvas.height = Math.floor(rect.height * dpr);
+
+      sigCtx = handDrawCanvas.getContext('2d');
+      sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sigCtx.lineCap = 'round';
+      sigCtx.lineJoin = 'round';
+      sigCtx.lineWidth = 3.2;
+      sigCtx.strokeStyle = currentInkColor;
+
+      if (prevDataUrl) {
+        const img = new Image();
+        img.onload = () => {
+          sigCtx.drawImage(img, 0, 0, rect.width, rect.height);
+        };
+        img.src = prevDataUrl;
+      }
+    }
+
+    function getSigPointerPos(e) {
+      const rect = handDrawCanvas.getBoundingClientRect();
+      const touch = e.touches && e.touches[0] ? e.touches[0] : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : e);
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    }
+
+    function startDrawSig(e) {
+      if (e.cancelable) e.preventDefault();
+      isDrawingSig = true;
+      hasSignatureContent = true;
+      canvasEmptyNote.classList.add('hidden');
+      lastSigPoint = getSigPointerPos(e);
+
+      sigCtx.beginPath();
+      sigCtx.strokeStyle = currentInkColor;
+      sigCtx.lineWidth = 3.2;
+      sigCtx.moveTo(lastSigPoint.x, lastSigPoint.y);
+      sigCtx.lineTo(lastSigPoint.x + 0.1, lastSigPoint.y + 0.1);
+      sigCtx.stroke();
+    }
+
+    function moveDrawSig(e) {
+      if (!isDrawingSig) return;
+      if (e.cancelable) e.preventDefault();
+      const pt = getSigPointerPos(e);
+      const midX = (lastSigPoint.x + pt.x) / 2;
+      const midY = (lastSigPoint.y + pt.y) / 2;
+
+      sigCtx.strokeStyle = currentInkColor;
+      sigCtx.lineWidth = 3.2;
+      sigCtx.quadraticCurveTo(lastSigPoint.x, lastSigPoint.y, midX, midY);
+      sigCtx.stroke();
+      sigCtx.beginPath();
+      sigCtx.moveTo(midX, midY);
+
+      lastSigPoint = pt;
+    }
+
+    function endDrawSig() {
+      if (!isDrawingSig) return;
+      isDrawingSig = false;
+      sigCtx.closePath();
+    }
+
+    handDrawCanvas.addEventListener('mousedown', startDrawSig);
+    handDrawCanvas.addEventListener('mousemove', moveDrawSig);
+    window.addEventListener('mouseup', endDrawSig);
+
+    handDrawCanvas.addEventListener('touchstart', startDrawSig, { passive: false });
+    handDrawCanvas.addEventListener('touchmove', moveDrawSig, { passive: false });
+    window.addEventListener('touchend', endDrawSig);
+
+    // Clear Signature Pad
+    btnClearCanvas.addEventListener('click', () => {
+      const rect = handDrawCanvas.getBoundingClientRect();
+      sigCtx.clearRect(0, 0, rect.width || handDrawCanvas.width, rect.height || handDrawCanvas.height);
+      hasSignatureContent = false;
+      canvasEmptyNote.classList.remove('hidden');
+      pngToolsBar.classList.add('hidden');
+      uploadedFileName.textContent = 'Mendukung PNG transparan / scan tanda tangan';
+      pngSignInput.value = '';
+    });
+
+    // Ink Color Switcher
+    inkColorBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentInkColor = btn.getAttribute('data-color');
+        inkColorBtns.forEach(b => b.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-800'));
+        btn.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-800');
+      });
+    });
+
+    // Helper: Load uploaded PNG/image onto Signature Canvas
+    function loadUploadedImageToCanvas(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('Pilih file gambar yang valid (PNG/JPG/WebP)', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          resizeSignatureCanvas();
+          const rect = handDrawCanvas.getBoundingClientRect();
+          const cw = rect.width || 320;
+          const ch = rect.height || 200;
+
+          sigCtx.clearRect(0, 0, cw, ch);
+
+          const pad = 16;
+          const scale = Math.min((cw - pad * 2) / img.width, (ch - pad * 2) / img.height);
+          const drawW = img.width * scale;
+          const drawH = img.height * scale;
+          const drawX = (cw - drawW) / 2;
+          const drawY = (ch - drawH) / 2;
+
+          sigCtx.drawImage(img, drawX, drawY, drawW, drawH);
+          hasSignatureContent = true;
+          canvasEmptyNote.classList.add('hidden');
+          pngToolsBar.classList.remove('hidden');
+          uploadedFileName.textContent = file.name;
+          showToast('Gambar tanda tangan berhasil dimuat', 'success');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    pngSignInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) loadUploadedImageToCanvas(file);
+    });
+
+    // Drag & Drop PNG support on canvas container
+    signatureDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      signatureDropZone.classList.add('border-blue-500');
+    });
+    signatureDropZone.addEventListener('dragleave', () => {
+      signatureDropZone.classList.remove('border-blue-500');
+    });
+    signatureDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      signatureDropZone.classList.remove('border-blue-500');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) loadUploadedImageToCanvas(file);
+    });
+
+    // Remove White Background from uploaded image
+    btnRemoveWhiteBg.addEventListener('click', () => {
+      if (!hasSignatureContent) return;
+      const w = handDrawCanvas.width;
+      const h = handDrawCanvas.height;
+      if (w === 0 || h === 0) return;
+
+      const rawCtx = handDrawCanvas.getContext('2d');
+      const imgData = rawCtx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        // Jika piksel mendekati putih terang, jadikan transparan
+        if (r > 225 && g > 225 && b > 225) {
+          data[i + 3] = 0;
+        }
+      }
+      rawCtx.putImageData(imgData, 0, 0);
+      showToast('Latar putih berhasil dihapus menjadi transparan!', 'success');
+    });
+
+    // Helper: Auto-crop transparent margins around signature
+    function getTrimmedCanvasData(canvas) {
+      try {
+        const w = canvas.width;
+        const h = canvas.height;
+        if (w <= 0 || h <= 0) return null;
+
+        const ctx = canvas.getContext('2d');
+        const pixels = ctx.getImageData(0, 0, w, h).data;
+        let top = h, left = w, right = 0, bottom = 0;
+        let found = false;
+
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const alpha = pixels[(y * w + x) * 4 + 3];
+            if (alpha > 15) {
+              if (x < left) left = x;
+              if (x > right) right = x;
+              if (y < top) top = y;
+              if (y > bottom) bottom = y;
+              found = true;
+            }
+          }
+        }
+
+        if (!found) return null;
+
+        const pad = 10;
+        left = Math.max(0, left - pad);
+        top = Math.max(0, top - pad);
+        right = Math.min(w, right + pad);
+        bottom = Math.min(h, bottom + pad);
+
+        const trimmedW = Math.max(1, right - left);
+        const trimmedH = Math.max(1, bottom - top);
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = trimmedW;
+        tempCanvas.height = trimmedH;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(canvas, left, top, trimmedW, trimmedH, 0, 0, trimmedW, trimmedH);
+
+        return tempCanvas.toDataURL('image/png');
+      } catch (err) {
+        console.error('Trim error:', err);
+        return canvas.toDataURL('image/png');
+      }
+    }
+
+    /* =========================================================================
+     * 5. LOCAL DATABASE ENGINE (IndexedDB)
+     * ========================================================================= */
+    const DB_NAME = 'FajarPDFSignerDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'signatures';
+
+    function openSignatureDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+          }
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function saveSignatureToIndexedDB(dataUrl) {
+      const db = await openSignatureDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const item = {
+          dataUrl,
+          createdAt: new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+        };
+        const req = store.add(item);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function getAllSignaturesFromDB() {
+      const db = await openSignatureDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function deleteSignatureFromDB(id) {
+      const db = await openSignatureDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function renderSavedSignatures() {
+      try {
+        const list = await getAllSignaturesFromDB();
+        savedCountTag.textContent = `${list.length} TTD`;
+
+        if (list.length > 0) {
+          badgeDbCount.textContent = list.length;
+          badgeDbCount.classList.remove('hidden');
+        } else {
+          badgeDbCount.classList.add('hidden');
+        }
+
+        // Bersihkan kartu lama kecuali pesan kosong
+        Array.from(savedSignaturesContainer.children).forEach(child => {
+          if (child.id !== 'dbEmptyMessage') child.remove();
+        });
+
+        if (list.length === 0) {
+          dbEmptyMessage.classList.remove('hidden');
+          return;
+        }
+        dbEmptyMessage.classList.add('hidden');
+
+        list.slice().reverse().forEach((item, idx) => {
+          const card = document.createElement('div');
+          card.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm';
+          card.innerHTML = `
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="w-20 h-14 bg-white rounded-xl p-1.5 flex items-center justify-center shrink-0 border border-slate-600 bg-grid-pattern">
+                <img src="${item.dataUrl}" alt="TTD" class="max-h-full max-w-full object-contain" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-white truncate">Tanda Tangan #${list.length - idx}</p>
+                <p class="text-[10px] text-slate-400 truncate">${item.createdAt || 'Tersimpan lokal'}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button class="btn-use-sig px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-stamp text-[11px]"></i>
+                <span>Pakai</span>
+              </button>
+              <button class="btn-del-sig w-8 h-8 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 flex items-center justify-center active:scale-95" title="Hapus">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            </div>
+          `;
+
+          card.querySelector('.btn-use-sig').addEventListener('click', () => {
+            applySignatureImageToDocument(item.dataUrl);
+          });
+
+          card.querySelector('.btn-del-sig').addEventListener('click', async () => {
+            await deleteSignatureFromDB(item.id);
+            await renderSavedSignatures();
+            showToast('Tanda tangan dihapus dari database', 'info');
+          });
+
+          savedSignaturesContainer.appendChild(card);
+        });
+      } catch (err) {
+        console.error('DB render error:', err);
+      }
+    }
+
+    // Save current canvas to DB
+    btnSaveToDB.addEventListener('click', async () => {
+      if (!hasSignatureContent) {
+        showToast('Goreskan atau unggah tanda tangan terlebih dahulu', 'error');
+        return;
+      }
+      const trimmedData = getTrimmedCanvasData(handDrawCanvas);
+      if (!trimmedData) {
+        showToast('Kanvas tanda tangan masih kosong', 'error');
+        return;
+      }
+      await saveSignatureToIndexedDB(trimmedData);
+      await renderSavedSignatures();
+      showToast('Tanda tangan berhasil disimpan ke Database Lokal!', 'success');
+    });
+
+    // Use current canvas directly on PDF
+    btnUseDirectly.addEventListener('click', async () => {
+      if (!hasSignatureContent) {
+        showToast('Goreskan atau unggah tanda tangan terlebih dahulu', 'error');
+        return;
+      }
+      const trimmedData = getTrimmedCanvasData(handDrawCanvas);
+      if (!trimmedData) {
+        showToast('Kanvas tanda tangan masih kosong', 'error');
+        return;
+      }
+      // Otomatis simpan juga ke DB agar tidak hilang
+      await saveSignatureToIndexedDB(trimmedData);
+      await renderSavedSignatures();
+      applySignatureImageToDocument(trimmedData);
+    });
+
+    /* =========================================================================
+     * 6. MULTI-SIGNATURE STAMP ENGINE (DRAG, TOUCH RESIZE, NORMALIZED COORDS)
+     * ========================================================================= */
+    function applySignatureImageToDocument(dataUrl) {
+      setActiveTab('doc');
+
+      if (!currentPdfDoc) {
+        showToast('Tanda tangan siap! Silakan buka file PDF terlebih dahulu.', 'info');
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        const stageW = pdfStageContainer.clientWidth || 320;
+        const stageH = pdfStageContainer.clientHeight || 450;
+
+        const aspect = img.width / Math.max(1, img.height);
+        const defaultW = Math.min(stageW * 0.35, 160);
+        const defaultH = defaultW / aspect;
+
+        const rw = Math.min(0.8, defaultW / stageW);
+        const rh = Math.min(0.8, defaultH / stageH);
+
+        // Beri sedikit offset apabila sudah ada stempel di halaman yang sama
+        const samePageCount = stampsList.filter(s => s.pageNumber === currentPageNum).length;
+        const offsetRatio = (samePageCount % 5) * 0.04;
+
+        const rx = Math.max(0.05, Math.min(1 - rw - 0.05, 0.5 - rw / 2 + offsetRatio));
+        const ry = Math.max(0.05, Math.min(1 - rh - 0.05, 0.5 - rh / 2 + offsetRatio));
+
+        const newStamp = {
+          id: 'stamp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+          dataUrl,
+          pageNumber: currentPageNum,
+          rx,
+          ry,
+          rw,
+          rh
+        };
+
+        stampsList.push(newStamp);
+        activeStampId = newStamp.id;
+        renderStampsForCurrentPage();
+        updateQuickRemoveButton();
+        showToast('Tanda tangan ditempel! Geser untuk mengatur posisi.', 'success');
+      };
+      img.src = dataUrl;
+    }
+
+    function updateQuickRemoveButton() {
+      if (activeStampId && stampsList.some(s => s.id === activeStampId && s.pageNumber === currentPageNum)) {
+        btnQuickRemoveStamp.classList.remove('hidden');
+      } else {
+        btnQuickRemoveStamp.classList.add('hidden');
+      }
+    }
+
+    btnQuickRemoveStamp.addEventListener('click', () => {
+      if (!activeStampId) return;
+      stampsList = stampsList.filter(s => s.id !== activeStampId);
+      activeStampId = null;
+      renderStampsForCurrentPage();
+      updateQuickRemoveButton();
+      showToast('Stempel tanda tangan dihapus', 'info');
+    });
+
+    function renderStampsForCurrentPage() {
+      // Hapus elemen DOM stempel sebelumnya
+      pdfStageContainer.querySelectorAll('.pdf-stamp-item').forEach(el => el.remove());
+
+      const stageW = pdfStageContainer.clientWidth || pdfCanvas.clientWidth || 1;
+      const stageH = pdfStageContainer.clientHeight || pdfCanvas.clientHeight || 1;
+
+      const pageStamps = stampsList.filter(s => s.pageNumber === currentPageNum);
+
+      pageStamps.forEach(stamp => {
+        const el = document.createElement('div');
+        const isSelected = stamp.id === activeStampId;
+
+        el.className = `pdf-stamp-item absolute select-none touch-none ${
+          isSelected ? 'ring-2 ring-blue-600 bg-blue-500/5 z-30' : 'hover:ring-1 hover:ring-blue-400/60 z-20'
+        }`;
+
+        const x = stamp.rx * stageW;
+        const y = stamp.ry * stageH;
+        const w = stamp.rw * stageW;
+        const h = stamp.rh * stageH;
+
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.width = `${w}px`;
+        el.style.height = `${h}px`;
+        el.style.cursor = 'move';
+
+        el.innerHTML = `
+          <img src="${stamp.dataUrl}" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+          ${isSelected ? `
+            <button type="button" class="stamp-del-btn absolute -top-3 -left-3 w-6 h-6 rounded-full bg-rose-600 text-white text-xs flex items-center justify-center shadow-md hover:bg-rose-500">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="stamp-handle" title="Tarik untuk ubah ukuran"></div>
+          ` : ''}
+        `;
+
+        // Hapus stempel lewat tombol silang
+        const delBtn = el.querySelector('.stamp-del-btn');
+        if (delBtn) {
+          delBtn.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            stampsList = stampsList.filter(s => s.id !== stamp.id);
+            if (activeStampId === stamp.id) activeStampId = null;
+            renderStampsForCurrentPage();
+            updateQuickRemoveButton();
+            showToast('Stempel tanda tangan dihapus', 'info');
+          });
+        }
+
+        // Resize Handle Interaksi
+        const handle = el.querySelector('.stamp-handle');
+        if (handle) {
+          handle.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const startX = e.clientX;
+            const startW = stamp.rw * stageW;
+            const aspect = startW / Math.max(1, stamp.rh * stageH);
+
+            function onMove(ev) {
+              const dx = ev.clientX - startX;
+              const newW = Math.max(40, Math.min(stageW - (stamp.rx * stageW), startW + dx));
+              const newH = newW / aspect;
+              stamp.rw = newW / stageW;
+              stamp.rh = newH / stageH;
+              el.style.width = `${newW}px`;
+              el.style.height = `${newH}px`;
+            }
+
+            function onUp() {
+              window.removeEventListener('pointermove', onMove);
+              window.removeEventListener('pointerup', onUp);
+            }
+
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+          });
+        }
+
+        // Drag Move Interaksi
+        el.addEventListener('pointerdown', (e) => {
+          if (e.target.closest('.stamp-handle') || e.target.closest('.stamp-del-btn')) return;
+          e.stopPropagation();
+          e.preventDefault();
+
+          if (activeStampId !== stamp.id) {
+            activeStampId = stamp.id;
+            renderStampsForCurrentPage();
+            updateQuickRemoveButton();
+            return;
+          }
+
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const origX = stamp.rx * stageW;
+          const origY = stamp.ry * stageH;
+          const curW = stamp.rw * stageW;
+          const curH = stamp.rh * stageH;
+
+          function onMove(ev) {
+            const nx = Math.max(0, Math.min(stageW - curW, origX + (ev.clientX - startX)));
+            const ny = Math.max(0, Math.min(stageH - curH, origY + (ev.clientY - startY)));
+            stamp.rx = nx / stageW;
+            stamp.ry = ny / stageH;
+            el.style.left = `${nx}px`;
+            el.style.top = `${ny}px`;
+          }
+
+          function onUp() {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+          }
+
+          window.addEventListener('pointermove', onMove);
+          window.addEventListener('pointerup', onUp);
+        });
+
+        pdfStageContainer.appendChild(el);
+      });
+
+      updateQuickRemoveButton();
+    }
+
+    // Klik area kosong di kanvas PDF untuk melepas seleksi stempel
+    pdfStageContainer.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('.pdf-stamp-item') && activeStampId !== null) {
+        activeStampId = null;
+        renderStampsForCurrentPage();
+      }
+    });
+
+    /* =========================================================================
+     * 8. UNIFIED TOP ICON NAVIGATION SYSTEM
+     * ========================================================================= */
+    function setActiveTab(tab) {
+      viewDocument.classList.add('hidden');
+      viewSignaturePad.classList.add('hidden');
+      viewDatabase.classList.add('hidden');
+
+      // Sembunyikan popover ketika pindah tab
+      pdfZoomBar.classList.add('hidden');
+      pdfPaginationBar.classList.add('hidden');
+
+      const inactiveClass = 'w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0 relative';
+      const activeClass = 'w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/50 active:scale-95 flex items-center justify-center transition shrink-0 relative shadow-sm';
+
+      tabNavDoc.className = inactiveClass;
+      tabNavDraw.className = inactiveClass;
+      tabNavDb.className = inactiveClass;
+
+      if (tab === 'doc') {
+        viewDocument.classList.remove('hidden');
+        tabNavDoc.className = activeClass;
+        if (currentPdfDoc) {
+          renderPage(currentPageNum, false);
+        }
+      } else if (tab === 'draw') {
+        viewSignaturePad.classList.remove('hidden');
+        tabNavDraw.className = activeClass;
+        setTimeout(resizeSignatureCanvas, 50);
+      } else if (tab === 'db') {
+        viewDatabase.classList.remove('hidden');
+        tabNavDb.className = activeClass;
+        renderSavedSignatures();
+      }
+    }
+
+    tabNavDoc.addEventListener('click', () => setActiveTab('doc'));
+    tabNavDraw.addEventListener('click', () => setActiveTab('draw'));
+    tabNavDb.addEventListener('click', () => setActiveTab('db'));
+
+    /* =========================================================================
+     * 9. PERMANENT FLATTENING ENGINE (pdf-lib) - MULTI-SIGNATURE BATCH PROCESS
+     * ========================================================================= */
+    btnSavePdfHeader.addEventListener('click', async () => {
+      if (!originalFileObj && !originalPdfBytes) {
+        showToast('Pilih dokumen PDF terlebih dahulu', 'error');
+        return;
+      }
+      if (stampsList.length === 0) {
+        showToast('Tambahkan minimal 1 tanda tangan pada dokumen terlebih dahulu', 'error');
+        return;
+      }
+
+      const PDFLib = window.PDFLib || window.pdfLib;
+      if (!PDFLib) {
+        showToast('Pustaka pemrosesan PDF sedang disiapkan...', 'info');
+        return;
+      }
+
+      try {
+        btnSavePdfHeader.disabled = true;
+        btnSavePdfHeader.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-sm"></i>`;
+        showToast(`Menyatukan ${stampsList.length} tanda tangan secara permanen...`, 'info');
+
+        // 1. Ambil bytes dokumen segar
+        let bytesToProcess = originalPdfBytes;
+        if (!bytesToProcess || bytesToProcess.byteLength === 0) {
+          bytesToProcess = await originalFileObj.arrayBuffer();
+        }
+
+        // 2. Muat dokumen dengan pdf-lib
+        const pdfDoc = await PDFLib.PDFDocument.load(bytesToProcess, { ignoreEncryption: true });
+
+        // Cache gambar tanda tangan yang sudah di-embed
+        const imageCache = new Map();
+
+        // 3. Iterasi setiap tanda tangan menggunakan rasio ternormalisasi (rx, ry, rw, rh)
+        // sehingga 100% akurat baik disimpan dari mode potret, lanskap, maupun desktop!
+        for (const stamp of stampsList) {
+          let pngImage = imageCache.get(stamp.dataUrl);
+
+          if (!pngImage) {
+            const base64Data = stamp.dataUrl.split(',')[1];
+            const rawString = atob(base64Data);
+            const pngBytes = new Uint8Array(rawString.length);
+            for (let i = 0; i < rawString.length; i++) {
+              pngBytes[i] = rawString.charCodeAt(i);
+            }
+            pngImage = await pdfDoc.embedPng(pngBytes);
+            imageCache.set(stamp.dataUrl, pngImage);
+          }
+
+          // Target halaman PDF (0-indexed)
+          const targetPageIdx = Math.max(0, Math.min(pdfDoc.getPageCount() - 1, stamp.pageNumber - 1));
+          const page = pdfDoc.getPage(targetPageIdx);
+          const { width: pdfW, height: pdfH } = page.getSize();
+
+          const pdfStampW = Math.max(10, stamp.rw * pdfW);
+          const pdfStampH = Math.max(10, stamp.rh * pdfH);
+          const pdfX = Math.max(0, stamp.rx * pdfW);
+          
+          // pdf-lib origin (0,0) di kiri-bawah
+          const pdfY = Math.max(0, pdfH - ((stamp.ry * pdfH) + pdfStampH));
+
+          page.drawImage(pngImage, {
+            x: pdfX,
+            y: pdfY,
+            width: pdfStampW,
+            height: pdfStampH
+          });
+        }
+
+        // 4. Simpan dokumen PDF baru
+        const modifiedBytes = await pdfDoc.save();
+        const exportName = (originalFileObj?.name || 'dokumen.pdf').replace(/\.pdf$/i, '') + '_signed.pdf';
+        
+        // 5. Unduh berkas hasil
+        const blob = new Blob([modifiedBytes], { type: 'application/pdf' });
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = exportName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(downloadUrl);
+        }, 300);
+
+        showToast(`Berhasil! ${stampsList.length} tanda tangan telah menyatu permanen.`, 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Gagal memproses PDF: ' + (err.message || 'Kesalahan'), 'error');
+      } finally {
+        btnSavePdfHeader.disabled = false;
+        btnSavePdfHeader.innerHTML = `<i class="fa-solid fa-floppy-disk text-sm"></i>`;
+      }
+    });
+
+    /* =========================================================================
+     * 10. SYSTEM INITIALIZATION & ORIENTATION HANDLING
+     * ========================================================================= */
+    let resizeDebounceTimer = null;
+    function handleScreenResize() {
+      if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
+      resizeDebounceTimer = setTimeout(() => {
+        if (!viewSignaturePad.classList.contains('hidden')) {
+          resizeSignatureCanvas();
+        }
+        if (currentPdfDoc && !viewDocument.classList.contains('hidden')) {
+          renderPage(currentPageNum, false);
+        }
+      }, 150);
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      resizeSignatureCanvas();
+      await renderSavedSignatures();
+      setActiveTab('doc');
+    });
+
+    window.addEventListener('resize', handleScreenResize);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(handleScreenResize, 250);
+    });
+  </script>
+</body>
+</html>
