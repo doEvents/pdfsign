@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fajarpdf-pwa-v1.4c';
+const CACHE_NAME = 'fajarpdf-pwa-v1.4d';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
