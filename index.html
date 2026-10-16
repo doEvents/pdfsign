@@ -1826,6 +1826,21 @@ pdfPaginationBar.classList.remove('hidden');
         if (pwaModal) pwaModal.classList.add('hidden');
       });
     }
+window.addEventListener('DOMContentLoaded', async () => {
+  if ('launchQueue' in window) {
+    window.launchQueue.setConsumer(async (launchParams) => {
+      if (!launchParams.files || launchParams.files.length === 0) {
+        return;
+      }
+      for (const fileHandle of launchParams.files) {
+        const file = await fileHandle.getFile();
+        // file adalah objek File PDF yang dipilih pengguna
+        // Panggil fungsi pembaca PDF kamu di sini, contoh: loadPdfFromFile(file);
+        console.log("File PDF diterima dari sistem:", file.name);
+      }
+    });
+  }
+});
 
     
   </script>
