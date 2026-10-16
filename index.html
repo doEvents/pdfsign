@@ -95,7 +95,7 @@
           <i class="fa-solid fa-file-signature text-sm"></i>
         </div>
         <div class="hidden xs:block sm:block">
-          <h1 class="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">FajarPDFSigner v1.4f</h1>
+          <h1 class="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">FajarPDFSigner v1.4g</h1>
           <p id="topBarSubtitle" class="text-[10px] text-slate-400 truncate max-w-[110px] sm:max-w-[200px]">Tanda tangan offline</p>
         </div>
       </div>
@@ -1732,10 +1732,12 @@ if (btnRotRight) {
         showToast('Pilih dokumen PDF terlebih dahulu', 'error');
         return;
       }
+      /*
       if (stampsList.length === 0) {
         showToast('Tambahkan minimal 1 tanda tangan pada dokumen terlebih dahulu', 'error');
         return;
       }
+      */
 
       const origSize = originalFileObj ? originalFileObj.size : (originalPdfBytes ? originalPdfBytes.byteLength : 0);
       if (saveOriginalSizeInfo) {
