@@ -95,7 +95,7 @@
           <i class="fa-solid fa-file-signature text-sm"></i>
         </div>
         <div class="hidden xs:block sm:block">
-          <h1 class="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">FajarPDFSigner v1-2</h1>
+          <h1 class="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">FajarPDFSigner v1.3</h1>
           <p id="topBarSubtitle" class="text-[10px] text-slate-400 truncate max-w-[110px] sm:max-w-[200px]">Tanda tangan offline</p>
         </div>
       </div>
@@ -384,6 +384,70 @@
       </div>
     </div>
   </div>
+
+  <!-- MODAL PILIHAN SIMPAN & KOMPRESI PDF -->
+<div id="saveOptionsModal" class="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 text-white shadow-2xl">
+    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+          <i class="fa-solid fa-file-export text-sm"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold">Simpan & Optimalisasi PDF</h3>
+          <p id="saveOriginalSizeInfo" class="text-[11px] text-slate-400">Ukuran asli: Menghitung...</p>
+        </div>
+      </div>
+      <button id="btnCloseSaveModal" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center active:scale-95 transition">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <div class="space-y-2.5 mb-5">
+      <!-- Opsi 1: Original -->
+      <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-800/90 border-2 border-blue-500 cursor-pointer transition save-mode-card" data-mode="original">
+        <input type="radio" name="pdfCompressionMode" value="original" checked class="mt-1 accent-blue-500" />
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white">Original (Tanpa Kompresi)</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">Tercepat</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">Kualitas asli 100%, teks dokumen tetap tajam dan dapat disalin.</p>
+        </div>
+      </label>
+
+      <!-- Opsi 2: Kompresi Sedang -->
+      <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-800/50 border-2 border-slate-800 hover:border-slate-700 cursor-pointer transition save-mode-card" data-mode="medium">
+        <input type="radio" name="pdfCompressionMode" value="medium" class="mt-1 accent-blue-500" />
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white">Kompresi Optimal (Sedang)</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Hemat & Tajam</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">Mengurangi ukuran file hasil scan & meleburkan TTD agar anti-edit.</p>
+        </div>
+      </label>
+
+      <!-- Opsi 3: Kompresi Tinggi / Ukuran Kecil -->
+      <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-800/50 border-2 border-slate-800 hover:border-slate-700 cursor-pointer transition save-mode-card" data-mode="low">
+        <input type="radio" name="pdfCompressionMode" value="low" class="mt-1 accent-blue-500" />
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white">Kompresi Ekstrem (Ukuran Kecil)</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">Super Ringan</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">Ukuran file paling hemat untuk upload portal web atau kirim via WA.</p>
+        </div>
+      </label>
+    </div>
+
+    <button id="btnProcessSavePdf" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition">
+      <i class="fa-solid fa-download"></i>
+      <span>Proses & Unduh PDF</span>
+    </button>
+  </div>
+</div>
+
 
   <!-- PWA INSTALL MODAL GUIDE -->
   <div id="pwaModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center p-3">
@@ -1349,7 +1413,8 @@ pdfPaginationBar.classList.remove('hidden');
           rx,
           ry,
           rw,
-          rh
+          rh,
+          rotation: 0
         };
 
         stampsList.push(newStamp);
@@ -1378,7 +1443,7 @@ pdfPaginationBar.classList.remove('hidden');
       showToast('Stempel tanda tangan dihapus', 'info');
     });
 
-    function renderStampsForCurrentPage() {
+       function renderStampsForCurrentPage() {
       // Hapus elemen DOM stempel sebelumnya
       pdfStageContainer.querySelectorAll('.pdf-stamp-item').forEach(el => el.remove());
 
@@ -1407,16 +1472,28 @@ pdfPaginationBar.classList.remove('hidden');
         el.style.cursor = 'move';
 
         el.innerHTML = `
-          <img src="${stamp.dataUrl}" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+          <div class="w-full h-full" style="transform: rotate(${stamp.rotation || 0}deg); transition: transform 0.05s ease;">
+            <img src="${stamp.dataUrl}" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+          </div>
           ${isSelected ? `
-            <button type="button" class="stamp-del-btn absolute -top-3 -left-3 w-6 h-6 rounded-full bg-rose-600 text-white text-xs flex items-center justify-center shadow-md hover:bg-rose-500">
+            <button type="button" class="stamp-del-btn absolute -top-3 -left-3 w-6 h-6 rounded-full bg-rose-600 text-white text-xs flex items-center justify-center shadow-md hover:bg-rose-500" title="Hapus">
               <i class="fa-solid fa-xmark"></i>
             </button>
+            <div class="absolute -top-4 -right-10 flex items-center gap-1 z-40 bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-700 shadow-xl">
+  <button type="button" class="stamp-rot-left w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs flex items-center justify-center active:scale-95 transition" title="Putar Kiri 10°">
+    <i class="fa-solid fa-rotate-left text-[10px]"></i>
+  </button>
+  <span class="text-[10px] font-bold text-white px-1 select-none">${stamp.rotation || 0}°</span>
+  <button type="button" class="stamp-rot-right w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs flex items-center justify-center active:scale-95 transition" title="Putar Kanan 10°">
+    <i class="fa-solid fa-rotate-right text-[10px]"></i>
+  </button>
+</div>
+
             <div class="stamp-handle" title="Tarik untuk ubah ukuran"></div>
           ` : ''}
         `;
 
-        // Hapus stempel lewat tombol silang
+        // 1. Hapus stempel lewat tombol silang
         const delBtn = el.querySelector('.stamp-del-btn');
         if (delBtn) {
           delBtn.addEventListener('pointerdown', (e) => {
@@ -1429,7 +1506,32 @@ pdfPaginationBar.classList.remove('hidden');
           });
         }
 
-        // Resize Handle Interaksi
+        // 2. Logika Rotasi Dinamis Berdasarkan Gerakan Tarikan (Drag) pada Handle Indigos
+                // Tombol Putar Kiri (-10 derajat)
+const btnRotLeft = el.querySelector('.stamp-rot-left');
+if (btnRotLeft) {
+  btnRotLeft.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    stamp.rotation = ((stamp.rotation || 0) - 10 + 360) % 360;
+    renderStampsForCurrentPage();
+  });
+}
+
+// Tombol Putar Kanan (+10 derajat)
+const btnRotRight = el.querySelector('.stamp-rot-right');
+if (btnRotRight) {
+  btnRotRight.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    stamp.rotation = ((stamp.rotation || 0) + 10) % 360;
+    renderStampsForCurrentPage();
+  });
+}
+
+
+
+        // 3. Resize Handle Interaksi
         const handle = el.querySelector('.stamp-handle');
         if (handle) {
           handle.addEventListener('pointerdown', (e) => {
@@ -1459,9 +1561,10 @@ pdfPaginationBar.classList.remove('hidden');
           });
         }
 
-        // Drag Move Interaksi
+        // 4. Drag Move Interaksi (Pindah Posisi)
         el.addEventListener('pointerdown', (e) => {
-          if (e.target.closest('.stamp-handle') || e.target.closest('.stamp-del-btn')) return;
+          if (e.target.closest('.stamp-handle') || e.target.closest('.stamp-rot-left') || e.target.closest('.stamp-rot-right') || e.target.closest('.stamp-del-btn')) return;
+
           e.stopPropagation();
           e.preventDefault();
 
@@ -1585,7 +1688,45 @@ pdfPaginationBar.classList.remove('hidden');
     /* =========================================================================
      * 9. PERMANENT FLATTENING ENGINE (pdf-lib) - MULTI-SIGNATURE BATCH PROCESS
      * ========================================================================= */
-    btnSavePdfHeader.addEventListener('click', async () => {
+        // Referensi Elemen Modal Simpan & Kompresi
+    const saveOptionsModal = document.getElementById('saveOptionsModal');
+    const btnCloseSaveModal = document.getElementById('btnCloseSaveModal');
+    const btnProcessSavePdf = document.getElementById('btnProcessSavePdf');
+    const saveOriginalSizeInfo = document.getElementById('saveOriginalSizeInfo');
+    const saveModeCards = document.querySelectorAll('.save-mode-card');
+
+    function formatBytesSize(bytes) {
+      if (!bytes || bytes === 0) return '0 KB';
+      const kb = bytes / 1024;
+      if (kb < 1024) return `${kb.toFixed(1)} KB`;
+      return `${(kb / 1024).toFixed(2)} MB`;
+    }
+
+    // Highlight border kartu saat radio dipilih
+    saveModeCards.forEach(card => {
+      card.addEventListener('click', () => {
+        saveModeCards.forEach(c => {
+          c.classList.remove('border-blue-500', 'bg-slate-800/90');
+          c.classList.add('border-slate-800', 'bg-slate-800/50');
+        });
+        card.classList.remove('border-slate-800', 'bg-slate-800/50');
+        card.classList.add('border-blue-500', 'bg-slate-800/90');
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+      });
+    });
+
+    if (btnCloseSaveModal) {
+      btnCloseSaveModal.addEventListener('click', () => saveOptionsModal.classList.add('hidden'));
+    }
+    if (saveOptionsModal) {
+      saveOptionsModal.addEventListener('click', (e) => {
+        if (e.target === saveOptionsModal) saveOptionsModal.classList.add('hidden');
+      });
+    }
+
+    // 1. Klik Icon Floppy Disk di Header -> Buka Modal Pilihan Simpan
+    btnSavePdfHeader.addEventListener('click', () => {
       if (!originalFileObj && !originalPdfBytes) {
         showToast('Pilih dokumen PDF terlebih dahulu', 'error');
         return;
@@ -1595,6 +1736,28 @@ pdfPaginationBar.classList.remove('hidden');
         return;
       }
 
+      const origSize = originalFileObj ? originalFileObj.size : (originalPdfBytes ? originalPdfBytes.byteLength : 0);
+      if (saveOriginalSizeInfo) {
+        saveOriginalSizeInfo.textContent = `Ukuran file asli: ${formatBytesSize(origSize)} • ${totalPdfPages} Halaman`;
+      }
+      saveOptionsModal.classList.remove('hidden');
+    });
+
+    // Helper memuat gambar ke objek Image HTML (untuk mode kompresi kanvas)
+    function loadImgElement(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    // 2. Klik "Proses & Unduh PDF" di dalam Modal
+    btnProcessSavePdf.addEventListener('click', async () => {
+      const selectedRadio = document.querySelector('input[name="pdfCompressionMode"]:checked');
+      const mode = selectedRadio ? selectedRadio.value : 'original';
+
       const PDFLib = window.PDFLib || window.pdfLib;
       if (!PDFLib) {
         showToast('Pustaka pemrosesan PDF sedang disiapkan...', 'info');
@@ -1602,63 +1765,161 @@ pdfPaginationBar.classList.remove('hidden');
       }
 
       try {
+        saveOptionsModal.classList.add('hidden');
         btnSavePdfHeader.disabled = true;
         btnSavePdfHeader.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-sm"></i>`;
-        showToast(`Menyatukan ${stampsList.length} tanda tangan secara permanen...`, 'info');
 
-        // 1. Ambil bytes dokumen segar
-        let bytesToProcess = originalPdfBytes;
-        if (!bytesToProcess || bytesToProcess.byteLength === 0) {
-          bytesToProcess = await originalFileObj.arrayBuffer();
-        }
+        let modifiedBytes = null;
 
-        // 2. Muat dokumen dengan pdf-lib
-        const pdfDoc = await PDFLib.PDFDocument.load(bytesToProcess, { ignoreEncryption: true });
+        if (mode === 'original') {
+          /* =========================================================
+           * MODE 1: ORIGINAL (Tanpa Kompresi / Kualitas Murni 100%)
+           * ========================================================= */
+          showToast(`Menyimpan ${stampsList.length} TTD (Kualitas Original)...`, 'info');
 
-        // Cache gambar tanda tangan yang sudah di-embed
-        const imageCache = new Map();
-
-        // 3. Iterasi setiap tanda tangan menggunakan rasio ternormalisasi (rx, ry, rw, rh)
-        // sehingga 100% akurat baik disimpan dari mode potret, lanskap, maupun desktop!
-        for (const stamp of stampsList) {
-          let pngImage = imageCache.get(stamp.dataUrl);
-
-          if (!pngImage) {
-            const base64Data = stamp.dataUrl.split(',')[1];
-            const rawString = atob(base64Data);
-            const pngBytes = new Uint8Array(rawString.length);
-            for (let i = 0; i < rawString.length; i++) {
-              pngBytes[i] = rawString.charCodeAt(i);
-            }
-            pngImage = await pdfDoc.embedPng(pngBytes);
-            imageCache.set(stamp.dataUrl, pngImage);
+          let bytesToProcess = originalPdfBytes;
+          if (!bytesToProcess || bytesToProcess.byteLength === 0) {
+            bytesToProcess = await originalFileObj.arrayBuffer();
           }
 
-          // Target halaman PDF (0-indexed)
-          const targetPageIdx = Math.max(0, Math.min(pdfDoc.getPageCount() - 1, stamp.pageNumber - 1));
-          const page = pdfDoc.getPage(targetPageIdx);
-          const { width: pdfW, height: pdfH } = page.getSize();
+          const pdfDoc = await PDFLib.PDFDocument.load(bytesToProcess, { ignoreEncryption: true });
+          const imageCache = new Map();
 
-          const pdfStampW = Math.max(10, stamp.rw * pdfW);
-          const pdfStampH = Math.max(10, stamp.rh * pdfH);
-          const pdfX = Math.max(0, stamp.rx * pdfW);
-          
-          // pdf-lib origin (0,0) di kiri-bawah
-          const pdfY = Math.max(0, pdfH - ((stamp.ry * pdfH) + pdfStampH));
+          for (const stamp of stampsList) {
+            let pngImage = imageCache.get(stamp.dataUrl);
+            if (!pngImage) {
+              const base64Data = stamp.dataUrl.split(',')[1];
+              const rawString = atob(base64Data);
+              const pngBytes = new Uint8Array(rawString.length);
+              for (let i = 0; i < rawString.length; i++) {
+                pngBytes[i] = rawString.charCodeAt(i);
+              }
+              pngImage = await pdfDoc.embedPng(pngBytes);
+              imageCache.set(stamp.dataUrl, pngImage);
+            }
 
-          page.drawImage(pngImage, {
-            x: pdfX,
-            y: pdfY,
-            width: pdfStampW,
-            height: pdfStampH
-          });
+            const targetPageIdx = Math.max(0, Math.min(pdfDoc.getPageCount() - 1, stamp.pageNumber - 1));
+            const page = pdfDoc.getPage(targetPageIdx);
+            const { width: pdfW, height: pdfH } = page.getSize();
+
+            const pdfStampW = Math.max(10, stamp.rw * pdfW);
+            const pdfStampH = Math.max(10, stamp.rh * pdfH);
+            const pdfX = Math.max(0, stamp.rx * pdfW);
+            const pdfY = Math.max(0, pdfH - ((stamp.ry * pdfH) + pdfStampH));
+
+            const angle = stamp.rotation || 0;
+            if (angle !== 0 && PDFLib.degrees) {
+              const rad = (-angle * Math.PI) / 180;
+              const cos = Math.cos(rad);
+              const sin = Math.sin(rad);
+              const centerX = pdfX + pdfStampW / 2;
+              const centerY = pdfY + pdfStampH / 2;
+              const rotatedX = centerX - (pdfStampW / 2) * cos + (pdfStampH / 2) * sin;
+              const rotatedY = centerY - (pdfStampW / 2) * sin - (pdfStampH / 2) * cos;
+
+              page.drawImage(pngImage, {
+                x: rotatedX,
+                y: rotatedY,
+                width: pdfStampW,
+                height: pdfStampH,
+                rotate: PDFLib.degrees(-angle)
+              });
+            } else {
+              page.drawImage(pngImage, {
+                x: pdfX,
+                y: pdfY,
+                width: pdfStampW,
+                height: pdfStampH,
+                rotate: PDFLib.degrees(0)
+              });
+            }
+          }
+
+          modifiedBytes = await pdfDoc.save({ useObjectStreams: true });
+
+        } else {
+          /* =========================================================
+           * MODE 2 & 3: KOMPRESI OPTIMAL / EKSTREM (Full Flatten)
+           * ========================================================= */
+          const scaleConfig = mode === 'medium' ? 1.5 : 1.0;
+          const jpegQuality = mode === 'medium' ? 0.75 : 0.50;
+
+          const newPdfDoc = await PDFLib.PDFDocument.create();
+          const offCanvas = document.createElement('canvas');
+          const offCtx = offCanvas.getContext('2d');
+
+          // Muat gambar stempel ke memori agar cepat digambar
+          const loadedStampImages = new Map();
+          for (const stamp of stampsList) {
+            if (!loadedStampImages.has(stamp.dataUrl)) {
+              const imgEl = await loadImgElement(stamp.dataUrl);
+              loadedStampImages.set(stamp.dataUrl, imgEl);
+            }
+          }
+
+          for (let pageNum = 1; pageNum <= totalPdfPages; pageNum++) {
+            showToast(`Mengompresi halaman ${pageNum} dari ${totalPdfPages}...`, 'info');
+
+            const page = await currentPdfDoc.getPage(pageNum);
+            const origVp = page.getViewport({ scale: 1.0 });
+            const renderVp = page.getViewport({ scale: scaleConfig });
+
+            offCanvas.width = Math.floor(renderVp.width);
+            offCanvas.height = Math.floor(renderVp.height);
+
+            // Beri warna dasar putih bersih
+            offCtx.fillStyle = '#ffffff';
+            offCtx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+
+            // Render isi halaman PDF ke kanvas kompresi
+            await page.render({ canvasContext: offCtx, viewport: renderVp }).promise;
+
+            // Leburkan tanda tangan langsung ke atas kanvas halaman
+            const pageStamps = stampsList.filter(s => s.pageNumber === pageNum);
+            for (const stamp of pageStamps) {
+              const imgEl = loadedStampImages.get(stamp.dataUrl);
+              if (!imgEl) continue;
+
+              const sW = stamp.rw * offCanvas.width;
+              const sH = stamp.rh * offCanvas.height;
+              const sX = stamp.rx * offCanvas.width;
+              const sY = stamp.ry * offCanvas.height;
+              const angle = stamp.rotation || 0;
+
+              offCtx.save();
+              offCtx.translate(sX + sW / 2, sY + sH / 2);
+              offCtx.rotate((angle * Math.PI) / 180);
+              offCtx.drawImage(imgEl, -sW / 2, -sH / 2, sW, sH);
+              offCtx.restore();
+            }
+
+            // Konversi kanvas menjadi aliran byte JPEG terkompresi
+            const jpgDataUrl = offCanvas.toDataURL('image/jpeg', jpegQuality);
+            const base64Jpg = jpgDataUrl.split(',')[1];
+            const rawJpg = atob(base64Jpg);
+            const jpgBytes = new Uint8Array(rawJpg.length);
+            for (let i = 0; i < rawJpg.length; i++) {
+              jpgBytes[i] = rawJpg.charCodeAt(i);
+            }
+
+            const embeddedJpg = await newPdfDoc.embedJpg(jpgBytes);
+            const newPage = newPdfDoc.addPage([origVp.width, origVp.height]);
+            newPage.drawImage(embeddedJpg, {
+              x: 0,
+              y: 0,
+              width: origVp.width,
+              height: origVp.height
+            });
+          }
+
+          modifiedBytes = await newPdfDoc.save({ useObjectStreams: true });
         }
 
-        // 4. Simpan dokumen PDF baru
-        const modifiedBytes = await pdfDoc.save();
-        const exportName = (originalFileObj?.name || 'dokumen.pdf').replace(/\.pdf$/i, '') + '_signed.pdf';
-        
-        // 5. Unduh berkas hasil
+        // Hitung ukuran akhir dan unduh berkas
+        const finalSizeStr = formatBytesSize(modifiedBytes.byteLength);
+        const suffix = mode === 'original' ? '_signed.pdf' : `_signed_${mode}.pdf`;
+        const exportName = (originalFileObj?.name || 'dokumen.pdf').replace(/\.pdf$/i, '') + suffix;
+
         const blob = new Blob([modifiedBytes], { type: 'application/pdf' });
         const downloadUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1671,7 +1932,7 @@ pdfPaginationBar.classList.remove('hidden');
           URL.revokeObjectURL(downloadUrl);
         }, 300);
 
-        showToast(`Berhasil! ${stampsList.length} tanda tangan telah menyatu permanen.`, 'success');
+        showToast(`Selesai! Ukuran hasil: ${finalSizeStr}`, 'success');
       } catch (err) {
         console.error(err);
         showToast('Gagal memproses PDF: ' + (err.message || 'Kesalahan'), 'error');
@@ -1680,6 +1941,7 @@ pdfPaginationBar.classList.remove('hidden');
         btnSavePdfHeader.innerHTML = `<i class="fa-solid fa-floppy-disk text-sm"></i>`;
       }
     });
+
 
     /* =========================================================================
      * 10. SYSTEM INITIALIZATION & ORIENTATION HANDLING
