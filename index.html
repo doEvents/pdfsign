@@ -130,50 +130,18 @@
           </div>
         </div>
 
-        <!-- 4. Navigasi Halaman Dropdown Trigger & Popover -->
-        <div class="relative" id="pageDropdownWrapper">
-          <button id="btnTogglePageNav" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0" title="Navigasi Halaman">
-            <i class="fa-solid fa-book-open text-sm"></i>
-          </button>
-          <!-- Popover Navigasi Halaman -->
-          <div id="pdfPaginationBar" class="hidden absolute left-1/2 -translate-x-1/2 top-11 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-1.5 flex items-center gap-1.5 z-50 whitespace-nowrap">
-            <button id="btnPrevPage" class="w-8 h-8 rounded-lg text-slate-200 hover:bg-slate-700 active:bg-slate-600 flex items-center justify-center disabled:opacity-30" title="Sebelumnya">
-              <i class="fa-solid fa-chevron-left text-xs"></i>
-            </button>
-            <div class="flex items-center gap-1 text-xs text-slate-200 px-1">
-              <input 
-                type="number" 
-                id="jumpPageInput" 
-                value="1" 
-                min="1" 
-                class="w-12 h-7 text-center font-bold text-xs bg-slate-900 text-blue-400 border border-slate-700 rounded-md focus:outline-none focus:border-blue-500"
-              />
-              <span class="text-xs text-slate-400">/ <span id="totalPagesLabel">1</span></span>
-            </div>
-            <button id="btnNextPage" class="w-8 h-8 rounded-lg text-slate-200 hover:bg-slate-700 active:bg-slate-600 flex items-center justify-center disabled:opacity-30" title="Selanjutnya">
-              <i class="fa-solid fa-chevron-right text-xs"></i>
-            </button>
-          </div>
-        </div>
+        
 
         <!-- Divider tipis -->
         <div class="w-px h-6 bg-slate-800 mx-0.5"></div>
 
-        <!-- 5. View Dokumen PDF (Icon) -->
-        <button id="tabNavDoc" class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/40 active:scale-95 flex items-center justify-center transition shrink-0" title="Lihat Dokumen PDF">
-          <i class="fa-solid fa-file-pdf text-sm"></i>
+                <!-- 5. Tombol Tunggal "Sign" (Membuka Modal TTD) -->
+        <button id="btnOpenSignModal" class="px-3 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow transition shrink-0 relative" title="Tanda Tangan">
+          <i class="fa-solid fa-signature text-sm"></i>
+          <span>Sign</span>
+          <span id="badgeDbCount" class="ml-0.5 px-1.5 py-0.2 rounded-full bg-white text-blue-700 text-[10px] font-extrabold flex items-center justify-center hidden">0</span>
         </button>
 
-        <!-- 6. Buat TTD (Icon) -->
-        <button id="tabNavDraw" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0" title="Buat Tanda Tangan">
-          <i class="fa-solid fa-pen-nib text-sm"></i>
-        </button>
-
-        <!-- 7. Tersimpan TTD (Icon + Badge) -->
-        <button id="tabNavDb" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0 relative" title="Tanda Tangan Tersimpan">
-          <i class="fa-solid fa-box-archive text-sm"></i>
-          <span id="badgeDbCount" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 text-white text-[9px] font-bold flex items-center justify-center hidden">0</span>
-        </button>
 
         <!-- 8. Hapus Stempel Aktif (Muncul saat ada TTD di PDF) -->
         <button id="btnQuickRemoveStamp" class="hidden w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30 active:scale-95 flex items-center justify-center text-sm shrink-0" title="Hapus Stempel TTD">
@@ -222,124 +190,183 @@
 
       </div>
 
+            <!-- Floating Bottom Page Navigation Bar -->
+      <div id="pdfPaginationBar" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl px-2.5 py-1.5 flex items-center gap-2 z-40 whitespace-nowrap">
+        <button id="btnPrevPage" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 active:scale-95 flex items-center justify-center disabled:opacity-30 transition" title="Sebelumnya">
+          <i class="fa-solid fa-chevron-left text-xs"></i>
+        </button>
+        <div class="flex items-center gap-1.5 text-xs text-slate-200 px-1">
+          <span class="text-[11px] text-slate-400">Hal</span>
+          <input 
+            type="number" 
+            id="jumpPageInput" 
+            value="1" 
+            min="1" 
+            class="w-12 h-7 text-center font-bold text-xs bg-slate-950 text-blue-400 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+          <span class="text-xs text-slate-400">/ <span id="totalPagesLabel">1</span></span>
+        </div>
+        <button id="btnNextPage" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 active:scale-95 flex items-center justify-center disabled:opacity-30 transition" title="Selanjutnya">
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+
       <!-- Hint Bar Bottom -->
       <div id="pdfHintBar" class="hidden bg-slate-900/90 backdrop-blur-md border-t border-slate-800 px-3 py-1.5 text-center text-[11px] text-slate-300 shrink-0">
         <i class="fa-solid fa-hand-pointer text-blue-400 mr-1"></i> Geser tanda tangan untuk memindahkan, tarik titik biru di pojok untuk mengubah ukuran.
       </div>
 
+
     </section>
 
-    <!-- 2. TAB VIEW: BUAT TANDA TANGAN (Canvas Pad & Upload PNG) -->
-    <section id="viewSignaturePad" class="absolute inset-0 flex flex-col z-0 hidden bg-slate-900 p-4 overflow-y-auto smooth-scroll">
-      <div class="max-w-lg w-full mx-auto flex-1 flex flex-col">
+        <!-- MODAL TERPADU: DAFTAR TTD & STUDIO PEMBUATAN TTD -->
+    <div id="signModalOverlay" class="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
         
-        <!-- Header & Mode Switcher (Gambar Manual vs Upload PNG) -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-          <div>
-            <h2 class="text-sm font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-pen-nib text-blue-400"></i> Studio Tanda Tangan
-            </h2>
-            <p class="text-[11px] text-slate-400">Goreskan langsung atau unggah file gambar tanda tangan (PNG)</p>
+        <!-- Modal Top Header -->
+        <div class="px-4 py-3.5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900/95">
+          <div class="flex items-center gap-2">
+            <!-- Tombol Back (Hanya muncul saat di tampilan Buat TTD) -->
+            <button id="btnBackToSigList" class="hidden w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center active:scale-95 transition" title="Kembali ke Daftar">
+              <i class="fa-solid fa-arrow-left text-xs"></i>
+            </button>
+            <div>
+              <h2 id="signModalTitle" class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-signature text-blue-400"></i> Pilih Tanda Tangan
+              </h2>
+              <p id="signModalSubtitle" class="text-[11px] text-slate-400">Pilih TTD tersimpan atau buat tanda tangan baru</p>
+            </div>
           </div>
-          
-          <div class="flex items-center gap-2 self-start sm:self-auto">
-            <label class="cursor-pointer px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/40 text-xs font-bold active:scale-95 flex items-center gap-1.5 shadow-sm transition">
-              <i class="fa-solid fa-file-arrow-up text-xs"></i>
-              <span>Upload PNG</span>
-              <input type="file" id="pngSignInput" accept="image/png,image/webp,image/jpeg" class="hidden">
-            </label>
-            <button id="btnClearCanvas" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold active:scale-95 flex items-center gap-1 transition">
-              <i class="fa-solid fa-rotate-left text-[11px]"></i> Ulang
+          <button id="btnCloseSignModal" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center active:scale-95 transition">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- VIEW 1 (DEFAULT MODAL): DAFTAR TTD TERSIMPAN -->
+        <div id="viewDatabase" class="p-4 overflow-y-auto smooth-scroll flex-1 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <span id="savedCountTag" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-blue-400 border border-slate-700">0 TTD Tersimpan</span>
+            <button id="btnSwitchToCreateSig" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-blue-600/25 transition">
+              <i class="fa-solid fa-plus text-xs"></i>
+              <span>Tambah TTD</span>
             </button>
           </div>
-        </div>
 
-        <!-- Touch Canvas Container (Also supports Drag & Drop PNG) -->
-        <div id="signatureDropZone" class="relative w-full h-60 sm:h-64 bg-white rounded-2xl overflow-hidden border-2 border-slate-700 shadow-inner bg-grid-pattern touch-none shrink-0 transition">
-          <canvas id="handDrawCanvas" class="w-full h-full block cursor-crosshair touch-none"></canvas>
-          <div id="canvasEmptyNote" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs p-4 text-center">
-            <i class="fa-solid fa-signature text-4xl mb-2 text-slate-300"></i>
-            <span class="font-semibold text-slate-500">Goreskan tanda tangan di area ini</span>
-            <span class="text-[10px] text-slate-400 mt-0.5">atau ketuk tombol "Upload PNG" di atas</span>
+          <!-- Signature Cards Container -->
+          <div id="savedSignaturesContainer" class="space-y-2.5 overflow-y-auto flex-1 min-h-[220px] max-h-[55vh] pr-0.5">
+            <div id="dbEmptyMessage" class="text-center py-12 text-slate-500 text-xs">
+              <i class="fa-regular fa-folder-open text-3xl mb-2.5 text-slate-600 block"></i>
+              Belum ada tanda tangan tersimpan.<br>Ketuk tombol <b>+ Tambah TTD</b> di kanan atas untuk membuat baru.
+            </div>
           </div>
         </div>
 
-        <!-- Quick Upload PNG Card & Background Removal Tool -->
-        <div class="mt-3 bg-slate-800/90 p-3 rounded-xl border border-slate-700 flex flex-col gap-2.5">
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
-                <i class="fa-regular fa-file-image text-sm"></i>
-              </div>
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-white truncate">Punya File TTD PNG?</p>
-                <p id="uploadedFileName" class="text-[10px] text-slate-400 truncate">Mendukung PNG transparan / scan tanda tangan</p>
+        <!-- VIEW 2 (DALAM MODAL): STUDIO BUAT TANDA TANGAN BARU -->
+        <div id="viewSignaturePad" class="hidden p-4 overflow-y-auto smooth-scroll flex-1 flex flex-col">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
+            <span class="text-xs font-semibold text-slate-300">Kanvas Goresan / Upload PNG</span>
+            <div class="flex items-center gap-2">
+              <label class="cursor-pointer px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/40 text-xs font-bold active:scale-95 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-file-arrow-up text-xs"></i>
+                <span>Upload PNG</span>
+                <input type="file" id="pngSignInput" accept="image/png,image/webp,image/jpeg" class="hidden">
+              </label>
+              <button id="btnClearCanvas" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold active:scale-95 flex items-center gap-1 transition">
+                <i class="fa-solid fa-rotate-left text-[11px]"></i> Ulang
+              </button>
+            </div>
+          </div>
+
+                    <!-- Touch Canvas Container -->
+          <div id="signatureDropZone" class="relative w-full h-52 sm:h-56 bg-white rounded-2xl overflow-hidden border-2 border-slate-700 shadow-inner bg-grid-pattern touch-none shrink-0 transition-all duration-200">
+            <canvas id="handDrawCanvas" class="w-full h-full block cursor-crosshair touch-none"></canvas>
+            
+            <!-- Tombol Toggle Fullscreen Kanvas -->
+            <button type="button" id="btnToggleCanvasFull" class="absolute top-2.5 right-2.5 z-20 px-2.5 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-900 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-md active:scale-95 backdrop-blur-xs transition" title="Perbesar Kanvas Penuh">
+              <i id="iconCanvasFull" class="fa-solid fa-expand text-xs text-blue-400"></i>
+              <span id="textCanvasFull">Layar Penuh</span>
+            </button>
+
+            <!-- Bar Bawah Saat Mode Fullscreen Aktif (Ulang & Selesai) -->
+            <div id="fullscreenCanvasToolbar" class="hidden absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-3 py-2 rounded-2xl border border-slate-700 shadow-xl">
+              <span class="text-[11px] text-slate-300 font-semibold flex items-center gap-1.5">
+                <i class="fa-solid fa-pen-nib text-blue-400"></i> Mode Kanvas Penuh
+              </span>
+              <div class="flex items-center gap-2">
+                <button type="button" id="btnClearFullCanvas" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold active:scale-95 transition">
+                  <i class="fa-solid fa-rotate-left mr-1"></i> Ulang
+                </button>
+                <button type="button" id="btnDoneFullCanvas" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold active:scale-95 shadow transition">
+                  <i class="fa-solid fa-check mr-1"></i> Selesai
+                </button>
               </div>
             </div>
-            <button onclick="document.getElementById('pngSignInput').click()" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-[11px] font-bold shrink-0 shadow transition">
-              Pilih File PNG
-            </button>
+
+            <div id="canvasEmptyNote" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs p-4 text-center">
+              <i class="fa-solid fa-signature text-3xl mb-1.5 text-slate-300"></i>
+              <span class="font-semibold text-slate-500">Goreskan tanda tangan di area ini</span>
+              <span class="text-[10px] text-slate-400 mt-0.5">Ketuk "Layar Penuh" di pojok kanan atas agar lebih lega</span>
+            </div>
           </div>
 
+
           <!-- Opsi Hapus Background Putih (Muncul saat gambar di-upload) -->
-          <div id="pngToolsBar" class="hidden pt-2 border-t border-slate-700/80 flex items-center justify-between gap-2">
-            <span class="text-[11px] text-slate-300 flex items-center gap-1.5">
+          <div id="pngToolsBar" class="hidden mt-2.5 bg-slate-800/90 px-3 py-2 rounded-xl border border-slate-700 flex items-center justify-between gap-2">
+            <span id="uploadedFileName" class="text-[11px] text-slate-300 truncate flex items-center gap-1.5">
               <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
-              <span>Background gambar belum transparan?</span>
+              <span>Hapus latar putih gambar?</span>
             </span>
-            <button id="btnRemoveWhiteBg" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[11px] font-bold active:scale-95 transition">
+            <button id="btnRemoveWhiteBg" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[11px] font-bold active:scale-95 shrink-0 transition">
               Hapus Latar Putih
             </button>
           </div>
-        </div>
 
-        <!-- Ink Colors & Stroke Controls -->
-        <div class="mt-3 flex items-center justify-between bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
-          <span class="text-xs text-slate-300 font-semibold pl-1">Warna Tinta Goresan</span>
-          <div class="flex items-center gap-3">
-            <button data-color="#0f172a" class="ink-color-btn w-7 h-7 rounded-full bg-slate-900 ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-800 transition"></button>
-            <button data-color="#1d4ed8" class="ink-color-btn w-7 h-7 rounded-full bg-blue-700 transition"></button>
-            <button data-color="#b91c1c" class="ink-color-btn w-7 h-7 rounded-full bg-red-700 transition"></button>
+                   <!-- Ink Colors & Stroke Thickness Controls -->
+          <div class="mt-2.5 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-300 font-semibold pl-1">Warna Tinta</span>
+              <div class="flex items-center gap-3">
+                <button data-color="#0f172a" class="ink-color-btn w-6 h-6 rounded-full bg-slate-900 ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-800 transition"></button>
+                <button data-color="#1d4ed8" class="ink-color-btn w-6 h-6 rounded-full bg-blue-700 transition"></button>
+                <button data-color="#b91c1c" class="ink-color-btn w-6 h-6 rounded-full bg-red-700 transition"></button>
+              </div>
+            </div>
+
+            <!-- Slider Ketebalan Goresan -->
+            <div class="pt-2 border-t border-slate-700/70 flex items-center justify-between gap-3">
+              <span class="text-xs text-slate-300 font-semibold pl-1 shrink-0">Tebal Goresan</span>
+              <div class="flex items-center gap-2.5 flex-1 max-w-[200px]">
+                <input 
+                  type="range" 
+                  id="strokeWidthSlider" 
+                  min="1" 
+                  max="8" 
+                  step="0.5" 
+                  value="3" 
+                  class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <span id="strokeWidthLabel" class="text-[11px] font-bold text-blue-400 w-8 text-right shrink-0">3px</span>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Action Buttons -->
+          <div class="mt-3 grid grid-cols-2 gap-2.5">
+            <button id="btnSaveToDB" class="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-bold border border-slate-700 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-floppy-disk text-amber-400"></i>
+              <span>Simpan ke Daftar</span>
+            </button>
+            <button id="btnUseDirectly" class="py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-stamp text-white"></i>
+              <span>Langsung Pakai</span>
+            </button>
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="mt-3 grid grid-cols-2 gap-3 pb-24">
-          <button id="btnSaveToDB" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-bold border border-slate-700 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-floppy-disk text-amber-400"></i>
-            <span>Simpan ke DB</span>
-          </button>
-          <button id="btnUseDirectly" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-stamp text-white"></i>
-            <span>Pakai di PDF</span>
-          </button>
-        </div>
       </div>
-    </section>
+    </div>
 
-    <!-- 3. TAB VIEW: DATABASE TTD TERSIMPAN (IndexedDB) -->
-    <section id="viewDatabase" class="absolute inset-0 flex flex-col z-0 hidden bg-slate-900 p-4 smooth-scroll">
-      <div class="max-w-md w-full mx-auto flex-1 flex flex-col pb-24">
-        <div class="flex items-center justify-between mb-3">
-          <div>
-            <h2 class="text-sm font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-box-archive text-amber-400"></i> Database Lokal
-            </h2>
-            <p class="text-[11px] text-slate-400">Tersimpan di IndexedDB memori browser ponsel</p>
-          </div>
-          <span id="savedCountTag" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-blue-400 border border-slate-700">0 TTD</span>
-        </div>
-
-        <!-- Signature Cards Container -->
-        <div id="savedSignaturesContainer" class="space-y-2.5 overflow-y-auto flex-1">
-          <!-- Dinamis via JS -->
-          <div id="dbEmptyMessage" class="text-center py-16 text-slate-500 text-xs">
-            <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-600 block"></i>
-            Belum ada tanda tangan tersimpan.<br>Buka ikon Pena di atas untuk membuat tanda tangan baru.
-          </div>
-        </div>
-      </div>
-    </section>
 
   </main>
 
@@ -462,38 +489,19 @@
     const tabNavDraw = document.getElementById('tabNavDraw');
     const tabNavDb = document.getElementById('tabNavDb');
 
-    // Popover Zoom & Page Navigation Toggle Logic
+        // Popover Zoom Toggle Logic
     btnToggleZoom.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isHidden = pdfZoomBar.classList.contains('hidden');
-      pdfPaginationBar.classList.add('hidden');
-      if (isHidden) {
-        pdfZoomBar.classList.remove('hidden');
-      } else {
-        pdfZoomBar.classList.add('hidden');
-      }
+      pdfZoomBar.classList.toggle('hidden');
     });
 
-    btnTogglePageNav.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isHidden = pdfPaginationBar.classList.contains('hidden');
-      pdfZoomBar.classList.add('hidden');
-      if (isHidden) {
-        pdfPaginationBar.classList.remove('hidden');
-      } else {
-        pdfPaginationBar.classList.add('hidden');
-      }
-    });
-
-    // Tutup popover saat klik di luar area dropdown
+    // Tutup popover zoom saat klik di luar area dropdown
     document.addEventListener('click', (e) => {
       if (zoomDropdownWrapper && !zoomDropdownWrapper.contains(e.target)) {
         pdfZoomBar.classList.add('hidden');
       }
-      if (pageDropdownWrapper && !pageDropdownWrapper.contains(e.target)) {
-        pdfPaginationBar.classList.add('hidden');
-      }
     });
+
 
     /* =========================================================================
      * 2. TOAST NOTIFICATION UTILITY
@@ -575,6 +583,8 @@
         pdfStageWrapper.classList.remove('hidden');
         btnSavePdfHeader.disabled = false;
         pdfHintBar.classList.remove('hidden');
+pdfPaginationBar.classList.remove('hidden');
+
 
         await renderPage(1, true);
         showToast(`Dokumen berhasil dibuka (${totalPdfPages} halaman)`, 'success');
@@ -704,6 +714,109 @@
       });
     }
 
+    
+    // Fitur Cubit Layar (Pinch to Zoom) dengan Titik Fokus Tengah Jari (Focal Point)
+    let initialPinchDist = null;
+    let initialZoomFactor = 1.0;
+    let pinchBaseWidth = 0;
+    let pinchBaseHeight = 0;
+    let pinchDocRatioX = 0.5;
+    let pinchDocRatioY = 0.5;
+    let isPinching = false;
+
+    function getTouchDistance(touches) {
+      return Math.hypot(
+        touches[0].clientX - touches[1].clientX,
+        touches[0].clientY - touches[1].clientY
+      );
+    }
+
+    function getTouchMidpoint(touches) {
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2
+      };
+    }
+
+    pdfViewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2 && currentPdfDoc) {
+        isPinching = true;
+        initialPinchDist = getTouchDistance(e.touches);
+        initialZoomFactor = zoomFactor;
+        pinchBaseWidth = pdfStageContainer.offsetWidth;
+        pinchBaseHeight = pdfStageContainer.offsetHeight;
+
+        // Simpan titik relatif pada halaman PDF yang berada tepat di tengah kedua jari
+        const mid = getTouchMidpoint(e.touches);
+        const stageRect = pdfStageContainer.getBoundingClientRect();
+        pinchDocRatioX = (mid.x - stageRect.left) / Math.max(1, pinchBaseWidth);
+        pinchDocRatioY = (mid.y - stageRect.top) / Math.max(1, pinchBaseHeight);
+      }
+    }, { passive: true });
+
+    pdfViewport.addEventListener('touchmove', (e) => {
+      if (isPinching && e.touches.length === 2 && initialPinchDist !== null && currentPdfDoc) {
+        if (e.cancelable) e.preventDefault();
+
+        const currentDist = getTouchDistance(e.touches);
+        const rawScale = currentDist / initialPinchDist;
+
+        // Hitung zoomFactor baru secara real-time (dibatasi 50% s.d. 350%)
+        const newZoomFactor = Math.min(3.5, Math.max(0.5, initialZoomFactor * rawScale));
+        const effectiveRatio = newZoomFactor / initialZoomFactor;
+
+        zoomFactor = +newZoomFactor.toFixed(3);
+
+        if (btnZoomReset) {
+          btnZoomReset.textContent = `${Math.round(zoomFactor * 100)}%`;
+        }
+
+        // 1. Ubah ukuran tampilan halaman secara real-time mengikuti bukaan jari
+        const liveW = Math.round(pinchBaseWidth * effectiveRatio);
+        const liveH = Math.round(pinchBaseHeight * effectiveRatio);
+
+        pdfStageContainer.style.width = `${liveW}px`;
+        pdfStageContainer.style.height = `${liveH}px`;
+        pdfCanvas.style.width = `${liveW}px`;
+        pdfCanvas.style.height = `${liveH}px`;
+
+        // 2. Sinkronkan ukuran & posisi tanda tangan secara real-time
+        const pageStamps = stampsList.filter(s => s.pageNumber === currentPageNum);
+        pdfStageContainer.querySelectorAll('.pdf-stamp-item').forEach((el, idx) => {
+          const stamp = pageStamps[idx];
+          if (stamp) {
+            el.style.left = `${stamp.rx * liveW}px`;
+            el.style.top = `${stamp.ry * liveH}px`;
+            el.style.width = `${stamp.rw * liveW}px`;
+            el.style.height = `${stamp.rh * liveH}px`;
+          }
+        });
+
+        // 3. Kunci titik fokus zoom tepat di tengah cubitan jari (koreksi scroll otomatis)
+        const mid = getTouchMidpoint(e.touches);
+        const newStageRect = pdfStageContainer.getBoundingClientRect();
+        const targetScreenX = newStageRect.left + (pinchDocRatioX * liveW);
+        const targetScreenY = newStageRect.top + (pinchDocRatioY * liveH);
+
+        pdfViewport.scrollLeft += (targetScreenX - mid.x);
+        pdfViewport.scrollTop += (targetScreenY - mid.y);
+      }
+    }, { passive: false });
+
+    pdfViewport.addEventListener('touchend', (e) => {
+      if (isPinching && e.touches.length < 2) {
+        isPinching = false;
+        initialPinchDist = null;
+        // Simpan posisi scroll terakhir sebelum render ulang ketajaman PDF
+        const savedScrollLeft = pdfViewport.scrollLeft;
+        const savedScrollTop = pdfViewport.scrollTop;
+        renderPage(currentPageNum, false).then(() => {
+          pdfViewport.scrollLeft = savedScrollLeft;
+          pdfViewport.scrollTop = savedScrollTop;
+        });
+      }
+    });
+
     // Pagination events
     btnPrevPage.addEventListener('click', () => {
       if (currentPageNum > 1) {
@@ -744,8 +857,21 @@
     let sigCtx = handDrawCanvas.getContext('2d');
     let isDrawingSig = false;
     let hasSignatureContent = false;
-    let currentInkColor = '#0f172a';
+        let currentInkColor = '#0f172a';
+    let currentStrokeWidth = 3.0;
     let lastSigPoint = { x: 0, y: 0 };
+
+    const strokeWidthSlider = document.getElementById('strokeWidthSlider');
+    const strokeWidthLabel = document.getElementById('strokeWidthLabel');
+
+    if (strokeWidthSlider) {
+      strokeWidthSlider.addEventListener('input', (e) => {
+        currentStrokeWidth = parseFloat(e.target.value) || 3.0;
+        if (strokeWidthLabel) {
+          strokeWidthLabel.textContent = `${currentStrokeWidth}px`;
+        }
+      });
+    }
 
     function resizeSignatureCanvas() {
       if (!handDrawCanvas) return;
@@ -768,7 +894,7 @@
       sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       sigCtx.lineCap = 'round';
       sigCtx.lineJoin = 'round';
-      sigCtx.lineWidth = 3.2;
+      sigCtx.lineWidth = currentStrokeWidth;
       sigCtx.strokeStyle = currentInkColor;
 
       if (prevDataUrl) {
@@ -798,7 +924,7 @@
 
       sigCtx.beginPath();
       sigCtx.strokeStyle = currentInkColor;
-      sigCtx.lineWidth = 3.2;
+      sigCtx.lineWidth = currentStrokeWidth;
       sigCtx.moveTo(lastSigPoint.x, lastSigPoint.y);
       sigCtx.lineTo(lastSigPoint.x + 0.1, lastSigPoint.y + 0.1);
       sigCtx.stroke();
@@ -812,7 +938,7 @@
       const midY = (lastSigPoint.y + pt.y) / 2;
 
       sigCtx.strokeStyle = currentInkColor;
-      sigCtx.lineWidth = 3.2;
+      sigCtx.lineWidth = currentStrokeWidth;
       sigCtx.quadraticCurveTo(lastSigPoint.x, lastSigPoint.y, midX, midY);
       sigCtx.stroke();
       sigCtx.beginPath();
@@ -821,6 +947,7 @@
       lastSigPoint = pt;
     }
 
+    
     function endDrawSig() {
       if (!isDrawingSig) return;
       isDrawingSig = false;
@@ -835,7 +962,50 @@
     handDrawCanvas.addEventListener('touchmove', moveDrawSig, { passive: false });
     window.addEventListener('touchend', endDrawSig);
 
+        // Fitur Toggle Fullscreen Kanvas Goresan TTD
+    let isCanvasFullscreen = false;
+    const btnToggleCanvasFull = document.getElementById('btnToggleCanvasFull');
+    const iconCanvasFull = document.getElementById('iconCanvasFull');
+    const textCanvasFull = document.getElementById('textCanvasFull');
+    const fullscreenCanvasToolbar = document.getElementById('fullscreenCanvasToolbar');
+    const btnClearFullCanvas = document.getElementById('btnClearFullCanvas');
+    const btnDoneFullCanvas = document.getElementById('btnDoneFullCanvas');
+
+    function toggleSignatureCanvasFullscreen(forceState) {
+      isCanvasFullscreen = typeof forceState === 'boolean' ? forceState : !isCanvasFullscreen;
+
+      if (isCanvasFullscreen) {
+        // Ubah kontainer kanvas menjadi Full Satu Layar Penuh
+        signatureDropZone.classList.remove('relative', 'w-full', 'h-52', 'sm:h-56', 'rounded-2xl');
+        signatureDropZone.classList.add('fixed', 'inset-0', 'w-screen', 'h-screen', 'z-[60]', 'rounded-none');
+        iconCanvasFull.className = 'fa-solid fa-compress text-xs text-amber-400';
+        textCanvasFull.textContent = 'Kecilkan';
+        fullscreenCanvasToolbar.classList.remove('hidden');
+      } else {
+        // Kembalikan ke ukuran semula di dalam modal
+        signatureDropZone.classList.remove('fixed', 'inset-0', 'w-screen', 'h-screen', 'z-[60]', 'rounded-none');
+        signatureDropZone.classList.add('relative', 'w-full', 'h-52', 'sm:h-56', 'rounded-2xl');
+        iconCanvasFull.className = 'fa-solid fa-expand text-xs text-blue-400';
+        textCanvasFull.textContent = 'Layar Penuh';
+        fullscreenCanvasToolbar.classList.add('hidden');
+      }
+
+      // Sesuaikan resolusi kanvas dengan ukuran baru tanpa menghapus goresan yang sudah ada
+      setTimeout(resizeSignatureCanvas, 50);
+    }
+
+    if (btnToggleCanvasFull) {
+      btnToggleCanvasFull.addEventListener('click', () => toggleSignatureCanvasFullscreen());
+    }
+    if (btnDoneFullCanvas) {
+      btnDoneFullCanvas.addEventListener('click', () => toggleSignatureCanvasFullscreen(false));
+    }
+    if (btnClearFullCanvas) {
+      btnClearFullCanvas.addEventListener('click', () => btnClearCanvas.click());
+    }
+
     // Clear Signature Pad
+
     btnClearCanvas.addEventListener('click', () => {
       const rect = handDrawCanvas.getBoundingClientRect();
       sigCtx.clearRect(0, 0, rect.width || handDrawCanvas.width, rect.height || handDrawCanvas.height);
@@ -1341,42 +1511,73 @@
     /* =========================================================================
      * 8. UNIFIED TOP ICON NAVIGATION SYSTEM
      * ========================================================================= */
-    function setActiveTab(tab) {
-      viewDocument.classList.add('hidden');
-      viewSignaturePad.classList.add('hidden');
-      viewDatabase.classList.add('hidden');
+        const signModalOverlay = document.getElementById('signModalOverlay');
+    const btnOpenSignModal = document.getElementById('btnOpenSignModal');
+    const btnCloseSignModal = document.getElementById('btnCloseSignModal');
+    const btnSwitchToCreateSig = document.getElementById('btnSwitchToCreateSig');
+    const btnBackToSigList = document.getElementById('btnBackToSigList');
+    const signModalTitle = document.getElementById('signModalTitle');
+    const signModalSubtitle = document.getElementById('signModalSubtitle');
 
-      // Sembunyikan popover ketika pindah tab
+    function setActiveTab(mode) {
       pdfZoomBar.classList.add('hidden');
-      pdfPaginationBar.classList.add('hidden');
 
-      const inactiveClass = 'w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 active:scale-95 flex items-center justify-center transition shrink-0 relative';
-      const activeClass = 'w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/50 active:scale-95 flex items-center justify-center transition shrink-0 relative shadow-sm';
-
-      tabNavDoc.className = inactiveClass;
-      tabNavDraw.className = inactiveClass;
-      tabNavDb.className = inactiveClass;
-
-      if (tab === 'doc') {
-        viewDocument.classList.remove('hidden');
-        tabNavDoc.className = activeClass;
-        if (currentPdfDoc) {
-          renderPage(currentPageNum, false);
-        }
-      } else if (tab === 'draw') {
-        viewSignaturePad.classList.remove('hidden');
-        tabNavDraw.className = activeClass;
-        setTimeout(resizeSignatureCanvas, 50);
-      } else if (tab === 'db') {
+      if (mode === 'doc') {
+        // Tutup modal dan kembali ke layar dokumen PDF
+        signModalOverlay.classList.add('hidden');
+      } else if (mode === 'db') {
+        // Buka modal dan tampilkan daftar TTD tersimpan
+        signModalOverlay.classList.remove('hidden');
         viewDatabase.classList.remove('hidden');
-        tabNavDb.className = activeClass;
+        viewSignaturePad.classList.add('hidden');
+        btnBackToSigList.classList.add('hidden');
+        signModalTitle.innerHTML = `<i class="fa-solid fa-signature text-blue-400"></i> Pilih Tanda Tangan`;
+        signModalSubtitle.textContent = 'Pilih TTD tersimpan atau buat tanda tangan baru';
         renderSavedSignatures();
+      } else if (mode === 'draw') {
+        // Beralih ke tampilan pembuatan TTD di dalam modal yang sama
+        signModalOverlay.classList.remove('hidden');
+        viewDatabase.classList.add('hidden');
+        viewSignaturePad.classList.remove('hidden');
+        btnBackToSigList.classList.remove('hidden');
+        signModalTitle.innerHTML = `<i class="fa-solid fa-pen-nib text-blue-400"></i> Buat Tanda Tangan Baru`;
+        signModalSubtitle.textContent = 'Goreskan langsung di kanvas atau upload PNG';
+        setTimeout(resizeSignatureCanvas, 60);
       }
     }
 
-    tabNavDoc.addEventListener('click', () => setActiveTab('doc'));
-    tabNavDraw.addEventListener('click', () => setActiveTab('draw'));
-    tabNavDb.addEventListener('click', () => setActiveTab('db'));
+    // Event klik tombol "Sign" di toolbar atas -> buka modal tampilan daftar TTD
+    if (btnOpenSignModal) {
+      btnOpenSignModal.addEventListener('click', () => setActiveTab('db'));
+    }
+
+    // Event klik tombol "+ Tambah TTD" -> ubah isi modal ke studio pembuatan TTD
+    if (btnSwitchToCreateSig) {
+      btnSwitchToCreateSig.addEventListener('click', () => setActiveTab('draw'));
+    }
+
+    // Event klik tombol Panah Kembali di pojok kiri modal -> kembali ke daftar TTD
+    if (btnBackToSigList) {
+      btnBackToSigList.addEventListener('click', () => setActiveTab('db'));
+    }
+
+    // Event tutup modal (tombol X atau klik area gelap di luar modal)
+    if (btnCloseSignModal) {
+      btnCloseSignModal.addEventListener('click', () => setActiveTab('doc'));
+    }
+    if (signModalOverlay) {
+      signModalOverlay.addEventListener('click', (e) => {
+        if (e.target === signModalOverlay) setActiveTab('doc');
+      });
+    }
+
+    // Ketika klik "Simpan ke Daftar", otomatis kembali ke tampilan daftar TTD di modal
+    btnSaveToDB.addEventListener('click', () => {
+      if (hasSignatureContent) {
+        setTimeout(() => setActiveTab('db'), 150);
+      }
+    });
+
 
     /* =========================================================================
      * 9. PERMANENT FLATTENING ENGINE (pdf-lib) - MULTI-SIGNATURE BATCH PROCESS
@@ -1503,6 +1704,82 @@
     window.addEventListener('orientationchange', () => {
       setTimeout(handleScreenResize, 250);
     });
+        /* =========================================================================
+     * 11. PWA MANIFEST INJECTION & INSTALL PROMPT HANDLER
+     * ========================================================================= */
+    (function initPWA() {
+      // 1. Buat Web App Manifest secara dinamis dalam 1 file HTML
+      const svgIcon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%232563eb'/><path d='M30 65 L48 70 L72 32 C75 28 70 24 66 28 L42 60 L30 65 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='5' fill='%2338bdf8'/></svg>";
+      const manifestData = {
+        name: "FajarPDFSigner - Tanda Tangan PDF Digital",
+        short_name: "FajarPDFSigner",
+        description: "Aplikasi tanda tangan dokumen PDF digital secara offline dan aman.",
+        start_url: window.location.href,
+        display: "standalone",
+        background_color: "#0f172a",
+        theme_color: "#2563eb",
+        orientation: "any",
+        icons: [
+          {
+            src: svgIcon,
+            sizes: "192x192 512x512",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+          }
+        ]
+      };
+
+      const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = URL.createObjectURL(manifestBlob);
+      document.head.appendChild(manifestLink);
+
+      // 2. Hubungkan Tombol Install & Modal PWA yang sudah ada di HTML
+      const btnPwaInstall = document.getElementById('btnPwaInstall');
+      const pwaModal = document.getElementById('pwaModal');
+      const btnConfirmInstall = document.getElementById('btnConfirmInstall');
+      const btnDismissPwa = document.getElementById('btnDismissPwa');
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (btnPwaInstall) btnPwaInstall.classList.remove('hidden');
+      });
+
+      if (btnPwaInstall) {
+        btnPwaInstall.addEventListener('click', () => {
+          if (pwaModal) pwaModal.classList.remove('hidden');
+        });
+      }
+
+      if (btnConfirmInstall) {
+        btnConfirmInstall.addEventListener('click', async () => {
+          if (pwaModal) pwaModal.classList.add('hidden');
+          if (!deferredPrompt) return;
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            if (btnPwaInstall) btnPwaInstall.classList.add('hidden');
+            showToast('Aplikasi sedang dipasang ke layar utama!', 'success');
+          }
+          deferredPrompt = null;
+        });
+      }
+
+      if (btnDismissPwa) {
+        btnDismissPwa.addEventListener('click', () => {
+          if (pwaModal) pwaModal.classList.add('hidden');
+        });
+      }
+
+      window.addEventListener('appinstalled', () => {
+        if (btnPwaInstall) btnPwaInstall.classList.add('hidden');
+        deferredPrompt = null;
+      });
+    })();
+
+    
   </script>
 </body>
 </html>
