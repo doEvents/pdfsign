@@ -8,7 +8,7 @@ const ASSETS_TO_CACHE = [
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
   'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js'
-];
+]; 
 
 // 1. Install & cache aset awal (tanpa membuat instalasi gagal jika ada CDN yang lambat)
 self.addEventListener('install', (event) => {
