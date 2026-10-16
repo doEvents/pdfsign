@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fajarpdf-pwa-v1.4d';
+const CACHE_NAME = 'fajarpdf-pwa-v2.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,13 +10,18 @@ const ASSETS_TO_CACHE = [
   'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js'
 ];
 
+// 1. Install & cache aset awal (tanpa membuat instalasi gagal jika ada CDN yang lambat)
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE.map(url => new Request(url, { mode: 'no-cors' })))
+        .catch(err => console.log('Cache addAll partial error:', err));
+    })
   );
   self.skipWaiting();
 });
 
+// 2. Bersihkan cache versi lama secara otomatis
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -26,10 +31,26 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// 3. Strategi SMART FETCH: Utamakan ambil dari internet untuk update terbaru, 
+// fallback ke cache jika offline.
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Jika internet aktif, perbarui cache dengan file terbaru dari server/GitHub secara senyap
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // Jika sedang offline, ambil dari cache penyimpanan HP
+        return caches.match(event.request);
+      })
   );
 });
