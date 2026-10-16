@@ -1,0 +1,19 @@
+{
+  "name": "FajarPDFSigner - Tanda Tangan PDF Digital",
+  "short_name": "FajarPDFSigner",
+  "description": "Aplikasi tanda tangan dokumen PDF digital langsung di ponsel secara offline dan aman.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%232563eb'/><path d='M30 65 L48 70 L72 32 C75 28 70 24 66 28 L42 60 L30 65 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='5' fill='%2338bdf8'/></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
