@@ -95,7 +95,7 @@
           <i class="fa-solid fa-file-signature text-sm"></i>
         </div>
         <div class="hidden xs:block sm:block">
-          <h1 class="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">FajarPDFSigner v1.4b</h1>
+          <h1 class="text-xs sm:text-sm font-bold tracking-tight text-white leading-tight">FajarPDFSigner v1.4c</h1>
           <p id="topBarSubtitle" class="text-[10px] text-slate-400 truncate max-w-[110px] sm:max-w-[200px]">Tanda tangan offline</p>
         </div>
       </div>
@@ -2046,13 +2046,30 @@ if (btnRotRight) {
     /* =========================================================================
      * 11. PWA SERVICE WORKER & INSTALL PROMPT (UNTUK GITHUB PAGES)
      * ========================================================================= */
-    if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch((err) => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          // Paksa cek update ke server setiap kali aplikasi dibuka
+          reg.update();
+
+          // Jika ditemukan versi baru yang selesai diinstal, muat ulang otomatis
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showToast('Versi baru ditemukan! Memuat ulang aplikasi...', 'info');
+                setTimeout(() => {
+                  window.location.reload();
+                }, 1200);
+              }
+            });
+          });
+        }).catch((err) => {
           console.warn('SW registration failed:', err);
         });
       });
     }
+
 
     const btnPwaInstall = document.getElementById('btnPwaInstall');
     const pwaModal = document.getElementById('pwaModal');
