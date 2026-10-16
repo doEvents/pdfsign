@@ -16,6 +16,7 @@
   <!-- Favicon & PWA Icons -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%232563eb'/><path d='M30 65 L48 70 L72 32 C75 28 70 24 66 28 L42 60 L30 65 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='5' fill='%2338bdf8'/></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%232563eb'/><path d='M30 65 L48 70 L72 32 C75 28 70 24 66 28 L42 60 L30 65 Z' fill='%23ffffff'/><circle cx='70' cy='30' r='5' fill='%2338bdf8'/></svg>">
+  <link rel="manifest" href="./manifest.json">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1778,6 +1779,53 @@ pdfPaginationBar.classList.remove('hidden');
         deferredPrompt = null;
       });
     })();
+    /* =========================================================================
+     * 11. PWA SERVICE WORKER & INSTALL PROMPT (UNTUK GITHUB PAGES)
+     * ========================================================================= */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+          console.warn('SW registration failed:', err);
+        });
+      });
+    }
+
+    const btnPwaInstall = document.getElementById('btnPwaInstall');
+    const pwaModal = document.getElementById('pwaModal');
+    const btnConfirmInstall = document.getElementById('btnConfirmInstall');
+    const btnDismissPwa = document.getElementById('btnDismissPwa');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (btnPwaInstall) btnPwaInstall.classList.remove('hidden');
+    });
+
+    if (btnPwaInstall) {
+      btnPwaInstall.addEventListener('click', () => {
+        if (pwaModal) pwaModal.classList.remove('hidden');
+      });
+    }
+
+    if (btnConfirmInstall) {
+      btnConfirmInstall.addEventListener('click', async () => {
+        if (pwaModal) pwaModal.classList.add('hidden');
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          if (btnPwaInstall) btnPwaInstall.classList.add('hidden');
+          showToast('Aplikasi berhasil dipasang ke layar utama!', 'success');
+        }
+        deferredPrompt = null;
+      });
+    }
+
+    if (btnDismissPwa) {
+      btnDismissPwa.addEventListener('click', () => {
+        if (pwaModal) pwaModal.classList.add('hidden');
+      });
+    }
 
     
   </script>
